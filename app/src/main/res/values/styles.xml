@@ -1,0 +1,73 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/black</item>
+        <item name="colorPrimaryDark">@color/black</item>
+        <item name="colorAccent">@color/black</item>
+        <item name="android:listDivider">@color/white</item>
+
+    </style>
+
+
+    <style name="myDialog" parent="Theme.AppCompat.Dialog">
+        <item name="android:windowNoTitle">true</item>
+        ...
+    </style>
+
+    <style name="spinnerItemStyle" parent="android:Widget.TextView.SpinnerItem">
+
+    </style>
+
+
+    <style name="AppTheme.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+
+    <style name="AppTheme.PopupOverlay2" parent="@style/Widget.AppCompat.Light.ActionBar.Solid">
+        <item name="android:background">@color/backgroundGray</item>
+        <item name="android:backgroundStacked">@color/backgroundGray</item>
+        <item name="android:backgroundSplit">@color/backgroundGray</item>
+        <item name="android:textColor">@color/backgroundGray</item>
+        <item name="android:titleTextStyle">@color/backgroundGray</item>
+        <item name="android:actionBarDivider">@color/backgroundGray</item>
+    </style>
+
+    <style name="AppTheme.PopupOverlay3" parent="@style/Widget.AppCompat.Light.ActionBar.Solid">
+        <item name="android:background">@color/laser_pink</item>
+        <item name="android:backgroundStacked">@color/laser_pink</item>
+        <item name="android:backgroundSplit">@color/laser_pink</item>
+        <item name="android:textColor">@color/laser_pink</item>
+        <item name="android:titleTextStyle">@color/laser_pink</item>
+        <item name="android:actionBarDivider">@color/laser_pink</item>
+    </style>
+
+    <style name="AppTheme.PopupOverlaySearchPage" parent="@style/Theme.AppCompat.Light.DarkActionBar">
+        <item name="android:background">@color/backgroundGray</item>
+        <item name="android:backgroundStacked">@color/backgroundGray</item>
+        <item name="android:backgroundSplit">@color/backgroundGray</item>
+        <item name="android:textColor">@color/backgroundGray</item>
+        <item name="android:titleTextStyle">@color/backgroundGray</item>
+        <item name="android:actionBarDivider">@color/backgroundGray</item>
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="RatingBar" parent="Theme.AppCompat">
+        <item name="colorControlNormal">@color/gray</item>
+        <item name="colorControlActivated">@color/lightGreen</item>
+    </style>
+
+    <style name="SplashThem" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:windowBackground">@drawable/backgroud_splash</item>
+    </style>
+
+    <style name="RatingBarClinicpage" parent="Theme.AppCompat">
+        <item name="colorControlNormal">@color/gray</item>
+        <item name="colorControlActivated">@color/rating_star_colors</item>
+    </style>
+</resources>
