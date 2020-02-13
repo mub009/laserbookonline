@@ -81,6 +81,7 @@
             android:name=".Splash_Screen"
             android:configChanges="orientation"
             android:screenOrientation="portrait"
+            android:launchMode="singleTask"
             android:theme="@style/SplashThem">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -108,11 +109,11 @@
                 <category android:name="android.intent.category.BROWSABLE" />
 
                 <data
-                    android:host="example.app.link"
+                    android:host="labookingonline.app.link"
                     android:scheme="https" />
                 <!-- example-alternate domain is required for App Links when the Journeys/Web SDK and Deepviews are used inside your website. -->
                 <data
-                    android:host="example-alternate.app.link"
+                    android:host="labookingonline-alternate.app.link"
                     android:scheme="https" />
             </intent-filter>
         </activity>

@@ -77,7 +77,7 @@ dependencies {
 
     // required if your app is in the Google Play Store (tip: avoid using bundled play services libs)
     implementation 'com.google.firebase:firebase-appindexing:15.0.0' // App indexing
-
+    implementation 'com.google.android.gms:play-services-ads:9+'
 
 }
 

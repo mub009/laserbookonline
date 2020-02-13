@@ -25,6 +25,7 @@ import android.widget.Button;
 import android.widget.EditText;
 
 
+import com.mohtaref.clinics.utility.Constant;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -45,7 +46,7 @@ public class Verify extends AppCompatActivity{
     EditText verify_code;
     Button verify_btn;
     public  String user_register_id;
-    private String url_base="https://laserbookingonline.com/manager/APIs/clientV2/";
+    private String url_base= Constant.APIbaseLink;;
     public Boolean code_check;
     private User_verify mAuthTask = null;
     private Resend_verify_code resend_task=null;

@@ -58,6 +58,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;
 
+import static com.mohtaref.clinics.utility.Constant.APIbaseLink;
 import static com.mohtaref.clinics.utility.Constant.WhatsappMobile;
 
 public class Profile extends AppCompatActivity
@@ -75,7 +76,7 @@ public class Profile extends AppCompatActivity
     public ArrayList<String> Cities_ar;
     public ArrayList<String> Districts_en;
     public ArrayList<String> Districts_ar;
-    final private String url_base = "https://laserbookingonline.com/manager/APIs/clientV2/";
+    final private String url_base = APIbaseLink;
     private Register mAuthTask = null;
     public String region = "";
     public String city = "";

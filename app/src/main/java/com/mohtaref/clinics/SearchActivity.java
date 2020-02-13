@@ -21,6 +21,8 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.mohtaref.clinics.utility.Constant;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -56,7 +58,7 @@ public class SearchActivity extends Activity{
     String token;
     String search_string;
     TextView result_count;
-    private String url_base="https://laserbookingonline.com/manager/APIs/clientV2/";
+    private String url_base= Constant.APIbaseLink;;
     ArrayList<HashMap<String, String>>Search_data;
     public ArrayList<String> Search_names_en;
     String z="";

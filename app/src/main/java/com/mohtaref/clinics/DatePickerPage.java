@@ -79,9 +79,10 @@ public class DatePickerPage extends AppCompatActivity implements DatePickerDialo
     LinearLayout profile_side;
     LinearLayout rating_side;
     LinearLayout appointment_side;
-    LinearLayout group_login_real;
+    LinearLayout group_login_real,LLdrprofile,LLproverselecter;
     HashMap<String, String> offer;
     Calendar calendar;
+    String is_doctor;
     private Calendar lastSelectedCalendar = null;
     private static final String TAG = HttpHandlerPostToken.class.getSimpleName();
     DatePickerDialog dpd;
@@ -89,7 +90,8 @@ public class DatePickerPage extends AppCompatActivity implements DatePickerDialo
     HashMap<String, String> selected_provider;
     String token;
     ArrayList<Integer> days_off;
-    ArrayList<HashMap<String, String>> providers_list;
+    ArrayList<HashMap<String, String>> providers_list,Dr_Profile;
+    HashMap<String, String> DrProfile;
     public ArrayList<String> provider_list_en;
     public ArrayList<String> provider_list_ar;
     ProgressDialog pd;
@@ -131,6 +133,7 @@ public class DatePickerPage extends AppCompatActivity implements DatePickerDialo
         // List<EventDay> events = new ArrayList<>();
         provider_list_en = new ArrayList<>();
         provider_list_ar = new ArrayList<>();
+        DrProfile=new HashMap<String, String>();
         SharedPreferences prefg = getSharedPreferences("user", Activity.MODE_PRIVATE);
         String data = prefg.getString("data", "");
         try {
@@ -152,6 +155,10 @@ public class DatePickerPage extends AppCompatActivity implements DatePickerDialo
             rating_side.setVisibility(View.GONE);
             appointment_side.setVisibility(View.GONE);
         }
+
+        LLdrprofile= (LinearLayout) findViewById(R.id.LLdrprofile);
+        LLproverselecter=(LinearLayout) findViewById(R.id.LLproverselecter);
+
         //Calendar calendar = Calendar.getInstance();
 //        events.add(new EventDay(calendar, R.drawable.ic_person_black_24dp));
 
@@ -164,6 +171,10 @@ public class DatePickerPage extends AppCompatActivity implements DatePickerDialo
         // dialog.show();
 
         offer = (HashMap<String, String>) getIntent().getExtras().getSerializable("offer");
+
+
+
+
         Log.e("welcome to datepicker", "here is your offer " + offer.toString());
         //    String k= getIntent().getStringExtra("lat");
         //  Log.e("k= ","is "+k);
@@ -184,6 +195,7 @@ public class DatePickerPage extends AppCompatActivity implements DatePickerDialo
         // menu should be considered as top level destinations.
         days_off = new ArrayList<>();
         providers_list = new ArrayList<>();
+        Dr_Profile=new ArrayList<>();
 
         new GetProviders().execute();
         new GetDaysoff().execute();
@@ -559,10 +571,6 @@ public class DatePickerPage extends AppCompatActivity implements DatePickerDialo
                 try {
                     JSONArray c = new JSONArray(jsonStr);
 
-
-
-
-
                     //     listDataHeader.add(clinic_ob);
                     for (int i = 0; i < c.length(); i++) {
                         int day= (Integer) c.get(i)+1;
@@ -813,7 +821,7 @@ public class DatePickerPage extends AppCompatActivity implements DatePickerDialo
 //            final FormActivity formobject=new FormActivity();
 
             // Making a request to url and getting response
-            String urlget = base_url + "providers";
+            String urlget = base_url + "providersDetails";
             String jsonStr = null;
 
             // String jsonStr = sh.makeServiceCall(urlget, token, "", "");
@@ -851,8 +859,28 @@ public class DatePickerPage extends AppCompatActivity implements DatePickerDialo
             Log.e("is offers :", "Response from url countries: " + jsonStr);
             if (jsonStr != null) {
                 try {
-                    JSONArray c = new JSONArray(jsonStr);
+                    JSONObject providers = new JSONObject(jsonStr);
 
+                    JSONArray c=providers.getJSONArray("providers");
+                    is_doctor=providers.getString("is_doctor");
+
+                    if(is_doctor.equals("1"))
+                    {
+                        JSONObject DrDetails=providers.getJSONObject("DrDetails");
+
+                        // tmp hash map for single offer
+                        HashMap<String, String> Dr_Profile_ob = new HashMap<>();
+
+                       // selected_provider=DrDetails.getString("employeeId");
+                        Dr_Profile_ob.put("AboutUs_ar", DrDetails.getString("AboutUs_ar"));
+                        Dr_Profile_ob.put("AboutUs_en", DrDetails.getString("AboutUs_en"));
+                        Dr_Profile_ob.put("employeeName_en", DrDetails.getString("employeeName_en"));
+                        Dr_Profile_ob.put("employeeName_ar", DrDetails.getString("employeeName_ar"));
+                        Dr_Profile_ob.put("image", DrDetails.getString("image"));
+                        Dr_Profile.add(Dr_Profile_ob);
+                    }
+                   // is_doctor
+                    //providers
 
                     //     listDataHeader.add(clinic_ob);
                     for (int i = 0; i < c.length(); i++) {
@@ -972,8 +1000,22 @@ public class DatePickerPage extends AppCompatActivity implements DatePickerDialo
                 provider_spinner.setAdapter(adapter);
                 //  adapter.notifyDataSetChanged();
                 //    int spinnerPosition = adapter.getPosition("المدينة");
-                provider_spinner.setSelection(0);
+                //provider_spinner.setSelection(0);
                 // spinner_region.setBackgroundResource(arrow_left);
+
+                if(is_doctor.equals("1"))
+                {
+                    provider_spinner.setSelection(1);
+                    LLdrprofile.setVisibility(View.VISIBLE);
+                   // LLproverselecter.setVisibility(View.INVISIBLE);
+
+
+                }
+                else
+                {
+                    provider_spinner.setSelection(0);
+                }
+
 
 
 
@@ -1020,7 +1062,16 @@ public class DatePickerPage extends AppCompatActivity implements DatePickerDialo
                 provider_spinner.setAdapter(adapter);
                 //  adapter.notifyDataSetChanged();
                 //int spinnerPosition = adapter.getPosition("City");
-                provider_spinner.setSelection(0);
+                if(is_doctor.equals("1"))
+                {
+                    provider_spinner.setSelection(1);
+                    LLdrprofile.setVisibility(View.VISIBLE);
+                   // LLproverselecter.setVisibility(View.INVISIBLE);
+                }
+                else
+                {
+                    provider_spinner.setSelection(0);
+                }
             }
         }
 

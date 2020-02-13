@@ -10,8 +10,28 @@
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:showIn="@layout/app_bar_date_picker">
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:id="@+id/LLdrprofile">
+        <ImageView
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_gravity="center"
+            android:src="@drawable/profile"
+            ></ImageView>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:layout_height="wrap_content"
+            android:text="mmasmamsmamsmams sasnasnas sbasbabsba asbabsbabsba asbabsbbasbbasbab ansnbabs ansbabs absabnsb asbabnsbn asbansn asbansnabsabsna asbansbasbj sbhsabsbhab ahsbhas ahhbshasb asbabhshba abshasb asbahs  ahsbah sahsbah asabsbh ashba"></TextView>
+    </LinearLayout>
 
     <LinearLayout
+        android:layout_marginTop="10dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
@@ -32,6 +52,7 @@
     </LinearLayout>
 
     <LinearLayout
+        android:id="@+id/LLproverselecter"
         android:layout_width="match_parent"
         android:layout_height="161dp"
         android:orientation="vertical">

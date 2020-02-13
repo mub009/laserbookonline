@@ -197,7 +197,7 @@
                                     android:layout_height="wrap_content"
                                     android:gravity="center"
                                     android:layout_gravity="center"
-                                    android:text="teath" />
+                                    android:text="" />
                             </LinearLayout>
                             <LinearLayout
                                 android:id="@+id/btn_7"
@@ -221,7 +221,32 @@
                                     android:layout_height="wrap_content"
                                     android:gravity="center"
                                     android:layout_gravity="center"
-                                    android:text="skin" />
+                                    android:text="" />
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:id="@+id/btn_8"
+                                android:layout_width="wrap_content"
+                                android:layout_height="match_parent"
+                                android:layout_marginStart="20dp"
+                                android:layout_marginEnd="5dp"
+                                android:clickable="true"
+                                android:onClick="btn8"
+                                android:orientation="vertical">
+
+                                <ImageView
+                                    android:id="@+id/img_btn8"
+                                    android:layout_width="50dp"
+                                    android:layout_height="50dp"
+                                    android:src="@drawable/facial" />
+
+                                <TextView
+                                    android:id="@+id/catgori8"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:gravity="center"
+                                    android:layout_gravity="center"
+                                    android:text="" />
                             </LinearLayout>
 
                         </LinearLayout>

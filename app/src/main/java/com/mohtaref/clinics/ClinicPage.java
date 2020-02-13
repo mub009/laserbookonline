@@ -106,6 +106,7 @@ public class ClinicPage extends AppCompatActivity implements OnMapReadyCallback 
     ArrayList<HashMap<String, String>> Services_Botox;
     ArrayList<HashMap<String, String>> Services_Dental;
     ArrayList<HashMap<String, String>> Services_Skin;
+    ArrayList<HashMap<String, String>> Consultation_Skin;
 
     Intent intent_offer;
     private GoogleMap mMaps;
@@ -164,6 +165,7 @@ public class ClinicPage extends AppCompatActivity implements OnMapReadyCallback 
         Services_Botox = new ArrayList<>();
         Services_Dental = new ArrayList<>();
         Services_Skin = new ArrayList<>();
+        Consultation_Skin=new ArrayList<>();
         // DrawerLayout drawer = findViewById(R.id.drawer_layout);
         ClinicData = (HashMap<String, String>) getIntent().getExtras().getSerializable("Clinic");
 
@@ -558,6 +560,7 @@ public class ClinicPage extends AppCompatActivity implements OnMapReadyCallback 
                 conn.setRequestProperty("Client-Auth-Token", "Bearer"+" "+token);
                 String offerid="";
                 if(ClinicData.get("offerId")!=null)
+
                     offerid  =ClinicData.get("offerId");
 
                     JSONObject jsonParam = new JSONObject();
@@ -940,7 +943,7 @@ public class ClinicPage extends AppCompatActivity implements OnMapReadyCallback 
             );
 
             offers_list_view.setAdapter(adapter);
-            int L=0,F=0,B=0,D=0,S=0;
+            int L=0,F=0,B=0,D=0,S=0,C=0;
             offers_list_view.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
@@ -995,7 +998,7 @@ public class ClinicPage extends AppCompatActivity implements OnMapReadyCallback 
             rating_list_view.setAdapter(adapter_rating);
             setListViewHeightBasedOnChildren(rating_list_view);
 
-            boolean Add_LASER=false,Add_Filler=false,Add_Botox=false,Add_Dental=false,Add_Skin=false;
+            boolean Add_LASER=false,Add_Filler=false,Add_Botox=false,Add_Dental=false,Add_Skin=false,Add_Consultation=false;
             if(lng.equals("ar")){
                 for (int j=0;j<services_list.size();j++){
                     String category=services_list.get(j).get("categoryName_ar");
@@ -1069,6 +1072,14 @@ public class ClinicPage extends AppCompatActivity implements OnMapReadyCallback 
                         D++;
                     }
 
+                    if( category.equals("Doctors")){
+                        Consultation_Skin.add(services_list.get(j));
+                        Add_Consultation=true;
+                        C++;
+                    }
+
+                    //Consultation
+
                 }
                 if(L>0)
                     exphead.add("LASER");
@@ -1080,6 +1091,8 @@ public class ClinicPage extends AppCompatActivity implements OnMapReadyCallback 
                     exphead.add("Dental");
                 if(S>0)
                     exphead.add("Skin");
+                if(C>0)
+                    exphead.add("Doctors");
 
             }
 
@@ -1101,10 +1114,13 @@ public class ClinicPage extends AppCompatActivity implements OnMapReadyCallback 
                 servicesOfclinic.add(Services_Dental);
             }
             if(Add_Skin==true)
-                {
-                    servicesOfclinic.add(Services_Skin);
-
-                }
+            {
+                servicesOfclinic.add(Services_Skin);
+            }
+            if(Add_Consultation==true)
+            {
+                servicesOfclinic.add(Consultation_Skin);
+            }
 
 
 

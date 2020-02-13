@@ -86,6 +86,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
+import static com.mohtaref.clinics.utility.Constant.APIbaseLink;
 import static com.mohtaref.clinics.utility.Constant.WhatsappMobile;
 
 public class HomePage extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks,
@@ -98,7 +99,7 @@ public class HomePage extends AppCompatActivity implements GoogleApiClient.Conne
     public int Scrollofy = 0;
     public int Scrollofx = 0;
     SliderLayout sliderLayout;
-    final private String base_url = "https://laserbookingonline.com/manager/APIs/clientV2/";
+    final private String base_url = APIbaseLink;
     boolean doubleBackToExitPressedOnce = false;
     public int numofItmesDown = 0;
     int numofItmesUP = -1;
@@ -115,6 +116,7 @@ public class HomePage extends AppCompatActivity implements GoogleApiClient.Conne
     TextView cati5;
     TextView cati6;
     TextView cati7;
+    TextView cati8;
     ImageView img_cati1;
     ImageView img_cati2;
     ImageView img_cati3;
@@ -122,6 +124,7 @@ public class HomePage extends AppCompatActivity implements GoogleApiClient.Conne
     ImageView img_cati5;
     ImageView img_cati6;
     ImageView img_cati7;
+    ImageView img_cati8;
     ListView list;
     double latitude = 0.0;
     double longitude = 0.0;
@@ -420,6 +423,12 @@ public class HomePage extends AppCompatActivity implements GoogleApiClient.Conne
         System.exit(0);
 
 
+    }
+
+    public void btn8(View view) {
+        Intent i = new Intent(HomePage.this, Clinics_List_Laser.class);
+        i.putExtra("category", categories_list.get(5));
+        startActivity(i);
     }
 
     public void btn7(View view) {
@@ -897,6 +906,7 @@ public class HomePage extends AppCompatActivity implements GoogleApiClient.Conne
                 cati5 = (TextView) findViewById(R.id.catgori5);
                 cati6 = (TextView) findViewById(R.id.catgori6);
                 cati7 = (TextView) findViewById(R.id.catgori7);
+                cati8 = (TextView) findViewById(R.id.catgori8);
 
                 if(lng.equals("ar")){
                     String cat1 = categories_list.get(0).get("categoryName_ar");
@@ -904,6 +914,7 @@ public class HomePage extends AppCompatActivity implements GoogleApiClient.Conne
                     String cat3 = categories_list.get(2).get("categoryName_ar");
                     String cat4 = categories_list.get(3).get("categoryName_ar");
                     String cat5 = categories_list.get(4).get("categoryName_ar");
+                    String cat6 = categories_list.get(5).get("categoryName_ar");
 
                     // String cat5 = categories_list.get(4).get("categoryName_ar");
 
@@ -912,6 +923,7 @@ public class HomePage extends AppCompatActivity implements GoogleApiClient.Conne
                     cati5.setText(cat3);
                     cati6.setText(cat4);
                     cati7.setText(cat5);
+                    cati8.setText(cat6);
 
 
                 }
@@ -921,12 +933,14 @@ public class HomePage extends AppCompatActivity implements GoogleApiClient.Conne
                     String cat3 = categories_list.get(2).get("categoryName_en");
                     String cat4 = categories_list.get(3).get("categoryName_en");
                     String cat5 = categories_list.get(4).get("categoryName_en");
+                    String cat6 = categories_list.get(5).get("categoryName_en");
 
                     cati3.setText(cat1);
                     cati4.setText(cat2);
                     cati5.setText(cat3);
                     cati6.setText(cat4);
                     cati7.setText(cat5);
+                    cati8.setText(cat6);
 
                 }
                 ///// set text
@@ -942,13 +956,14 @@ public class HomePage extends AppCompatActivity implements GoogleApiClient.Conne
                 String img_cat3_string = categories_list.get(2).get("fullimg");
                 String img_cat4_string = categories_list.get(3).get("fullimg");
                 String img_cat5_string = categories_list.get(4).get("fullimg");
-
+                String img_cat6_string = categories_list.get(5).get("fullimg");
 
                 img_cati3 =(ImageView)findViewById(R.id.img_btn3);
                 img_cati4 =(ImageView)findViewById(R.id.img_btn4);
                 img_cati5 =(ImageView)findViewById(R.id.img_btn5);
                 img_cati6 =(ImageView)findViewById(R.id.img_btn6);
                 img_cati7 =(ImageView)findViewById(R.id.img_btn7);
+                img_cati8 =(ImageView)findViewById(R.id.img_btn8);
 
 //            Picasso.get()
 //                    .load(img_cat1_string)
@@ -961,6 +976,7 @@ public class HomePage extends AppCompatActivity implements GoogleApiClient.Conne
                 Picasso.get().load(img_cat3_string).fit().into(img_cati5);
                 Picasso.get().load(img_cat4_string).fit().into(img_cati6);
                 Picasso.get().load(img_cat5_string).fit().into(img_cati7);
+                Picasso.get().load(img_cat6_string).fit().into(img_cati8);
 
             }
         }
