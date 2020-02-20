@@ -244,7 +244,7 @@ public class SearchActivity extends Activity{
             String response = null;
             String jsonStr = null;
             try {
-                URL url = new URL(url_base+"search"); //Enter URL here
+                URL url = new URL(url_base+"searchwithdoctor"); //Enter URL here
                 HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
                 httpURLConnection.setRequestMethod("POST"); // here you are telling that it is a POST request, which can be changed into "PUT", "GET", "DELETE" etc.
                 httpURLConnection.setRequestProperty("Content-Type", "application/json;charset=UTF-8");
@@ -285,27 +285,37 @@ public class SearchActivity extends Activity{
                         JSONArray jsonarray = new JSONArray(jsonStr);
                         for (int i = 0; i < jsonarray.length(); i++) {
                             JSONObject c = jsonarray.getJSONObject(i);
-                            String clinicId = c.getString("clinicId");
-                            String clinicName_en = c.getString("clinicName_en");
-                            String clinicName_ar = c.getString("clinicName_ar");
-                            String deleted = c.getString("deleted");
-
+                            String Id = c.getString("Id");
+                            String Title_en=c.getString("Title_en");
+                            String Title_ar=c.getString("Title_ar");
+                            String type=c.getString("type");
+                            String SubTitle_en=c.getString("SubTitle_en");
+                            String SubTitle_ar=c.getString("SubTitle_ar");
+                            String DoctorEmployeeId=c.getString("DoctorEmployeeId");
+                            String duration=c.getString("duration");
+                            String clinicId=c.getString("clinicId");
 
                             HashMap<String, String> data = new HashMap<>();
 
                             // adding each child node to HashMap key => value
-                            data.put("clinicId",clinicId);
-                            data.put("clinicName_en", clinicName_en);
-                            data.put("clinicName_ar", clinicName_ar);
-                            data.put("deleted", deleted);
+                            data.put("Id",Id);
+                            data.put("Title_en", Title_en);
+                            data.put("Title_ar", Title_ar);
+                            data.put("type", type);
+                            data.put("SubTitle_en", SubTitle_en);
+                            data.put("SubTitle_ar", SubTitle_ar);
+                            data.put("DoctorEmployeeId", DoctorEmployeeId);
+                            data.put("duration", duration);
+                            data.put("clinicId", clinicId);
+                            data.put("serviceId",Id);
                             //           Search_names_en.add(clinicName_en);
                             //         Search_names_ar.add(clinicName_ar);
                             Search_data.add(data);
                             HashMap<String, String> data_en = new HashMap<>();
-                            data_en.put("clinicName_en",clinicName_en);
+                            data_en.put("Title_en",Title_en);
                             search_list.add(data_en);
                             HashMap<String, String> data_ar = new HashMap<>();
-                            data_ar.put("clinicName_ar",clinicName_ar);
+                            data_ar.put("Title_ar",Title_ar);
                             search_list_ar.add(data_ar);
                         }
                     } catch (final JSONException e) {
@@ -369,13 +379,25 @@ public class SearchActivity extends Activity{
 
             serachListView.setAdapter(adapter);
             adapter.notifyDataSetChanged();
+            //click event
             serachListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                     HashMap<String, String> offers = (HashMap<String, String>) parent.getAdapter().getItem(position);
-                    Intent intent=new Intent(SearchActivity.this,ClinicPage.class);
-                    intent.putExtra("Clinic",offers);
-                    startActivity(intent);
-                    finishAffinity();
+                    if(offers.get("type").equals("clinic"))
+                    {
+                        Intent intent=new Intent(SearchActivity.this,ClinicPage.class);
+                        intent.putExtra("Clinic",offers);
+                        startActivity(intent);
+                        finishAffinity();
+                    }
+                    else if(offers.get("type").equals("doctor"))
+                    {
+                        Intent intent=new Intent(SearchActivity.this,DatePickerPage.class);
+                        intent.putExtra("offer",offers);
+                        startActivity(intent);
+                        finishAffinity();
+                    }
+
 
                     //here i want to get the items
                 }

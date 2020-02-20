@@ -883,6 +883,14 @@ public class Checkout extends AppCompatActivity{
                     JSONObject service=c.getJSONObject("service");
                     JSONObject clinic=c.getJSONObject("clinic");
 
+
+
+                    // tmp hash map for single offer
+                    HashMap<String, String> clinic_details_ob = new HashMap<>();
+
+                    clinic_details_ob.put("is_partiallyPaidEnable", clinic.getString("is_partiallyPaidEnable"));
+                    clinic_details=clinic_details_ob;
+
                    //Log.e("is offers :", "mubashir: " + service);
 
                     // tmp hash map for single offer
@@ -890,15 +898,18 @@ public class Checkout extends AppCompatActivity{
                     serviceDetails_ob.put("ClinicPercentage", service.getString("ClinicPercentage"));
                     serviceDetails_ob.put("balanceAmount", service.getString("balanceAmount"));
                     serviceDetails_ob.put("postCost", service.getString("postCost"));
+                    serviceDetails_ob.put("paymentTypes", service.getString("paymentTypes"));
+                    serviceDetails_ob.put("serviceName_en", service.getString("serviceName_en"));
+                    serviceDetails_ob.put("serviceName_ar", service.getString("serviceName_ar"));
+                    serviceDetails_ob.put("duration", service.getString("duration"));
+                    serviceDetails_ob.put("cost", service.getString("cost"));
+
+
                     serviceDetails=serviceDetails_ob;
 
                     //mubashir
 
-                    // tmp hash map for single offer
-                    HashMap<String, String> clinic_details_ob = new HashMap<>();
 
-                    clinic_details_ob.put("is_partiallyPaidEnable", clinic.getString("is_partiallyPaidEnable"));
-                    clinic_details=clinic_details_ob;
 
                     JSONObject provider=c.getJSONObject("provider");
 
@@ -1002,15 +1013,10 @@ public class Checkout extends AppCompatActivity{
 
                 if (clinic_details.get("is_partiallyPaidEnable").equals("1")) {
                     CreditPaymentApi = "partiallycreateUrlAndOrderV2";
-
                     partiallypaidAmount.setText(serviceDetails.get("postCost"));
-
                     balanceAmount.setText(serviceDetails.get("balanceAmount"));
-
-
                 } else {
                     CreditPaymentApi = "createUrlAndOrderV2";
-
                     txtbalanceAmount.setVisibility(View.GONE);
                     txtpartiallypaidAmount.setVisibility(View.GONE);
                     partiallypaidAmount.setVisibility(View.GONE);
@@ -1036,9 +1042,10 @@ public class Checkout extends AppCompatActivity{
                 terms_checkout = (TextView) findViewById(R.id.terms_checkout);
 
 
+
                 if (lng.equals("ar")) {
 
-                    service_checkout.setText(offer.get("serviceName_ar"));
+                    service_checkout.setText(serviceDetails.get("serviceName_ar"));
                     provider_checkout.setText(provider_hash.get("employeeName_ar"));
                     nationality_checkout.setText(provider_hash.get("nationalityName_ar"));
 
@@ -1052,7 +1059,7 @@ public class Checkout extends AppCompatActivity{
 
 
                 } else {
-                    service_checkout.setText(offer.get("serviceName_en"));
+                    service_checkout.setText(serviceDetails.get("serviceName_en"));
                     provider_checkout.setText(provider_hash.get("employeeName_en"));
                     nationality_checkout.setText(provider_hash.get("nationalityName_en"));
 
@@ -1068,19 +1075,17 @@ public class Checkout extends AppCompatActivity{
                 }
 
 
-                duration_checkout.setText(offer.get("duration"));
-                PaymentType = offer.get("paymentTypes");
-                cost_checkout.setText(offer.get("cost"));
-                String nocomma = offer.get("postCost");
+                duration_checkout.setText(serviceDetails.get("duration"));
+                PaymentType = serviceDetails.get("paymentTypes");
+                cost_checkout.setText(serviceDetails.get("cost"));
+                String nocomma = serviceDetails.get("postCost");
                 nocomma = nocomma.replace(",", "");
                 total_checkout.setText(nocomma);
 
                 if (offer.get("offerId") != null && !offer.get("offerId").equals("null")) {
 
-                    PaymentType = offer.get("offerPaymentTypes");
-
+                    PaymentType = serviceDetails.get("paymentTypes");
                     discount_checkout.setText(offer.get("discount"));
-
 
                     Log.e("offer not null", "id " + offer.get("offerId") + " payment" + PaymentType);
 
@@ -1909,7 +1914,7 @@ public class Checkout extends AppCompatActivity{
                 }
                 else
                 {
-                    jsonParam.put("postCost", offer.get("postCost"));
+                    jsonParam.put("postCost", serviceDetails.get("postCost"));
                 }
 
 
@@ -1925,7 +1930,7 @@ public class Checkout extends AppCompatActivity{
                     jsonParam.put("offerId", null);
 
                 }
-                String nocomma=offer.get("postCost");
+                String nocomma=serviceDetails.get("postCost");
                 nocomma=  nocomma.replace(",", "");
                 jsonParam.put("totalCost",nocomma );
                 jsonParam.put("paymentType",selected_payment_type);

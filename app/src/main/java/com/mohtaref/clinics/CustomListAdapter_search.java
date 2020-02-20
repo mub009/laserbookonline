@@ -45,11 +45,11 @@ public class CustomListAdapter_search extends ArrayAdapter<HashMap<String, Strin
         hashmap_Current = CustomAdapter.get(position);
         if(lng.equals("ar")){
             TextView service = (TextView) convertView.findViewById(R.id.result_data);
-            service.setText(hashmap_Current.get("clinicName_ar"));
+            service.setText(hashmap_Current.get("Title_ar"));
         }
         else{
             TextView service = (TextView) convertView.findViewById(R.id.result_data);
-            service.setText(hashmap_Current.get("clinicName_en"));
+            service.setText(hashmap_Current.get("Title_en"));
         }
     }
 

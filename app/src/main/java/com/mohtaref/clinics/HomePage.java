@@ -478,16 +478,16 @@ public class HomePage extends AppCompatActivity implements GoogleApiClient.Conne
     public void Whatsapp(View view){
 
 
-        Intent intent = new Intent(this, Template.class);
-        startActivity(intent);
+//        Intent intent = new Intent(this, Template.class);
+//        startActivity(intent);
 
-//        try {
-//            Intent intent = new Intent ( Intent.ACTION_VIEW );
-//            intent.setData ( Uri.parse ( "https://wa.me/" + WhatsappMobile + "/?text=" + "" ) );
-//            startActivity ( intent );
-//        } catch (Exception e) {
-//            e.printStackTrace ();
-//        }
+        try {
+            Intent intent = new Intent ( Intent.ACTION_VIEW );
+            intent.setData ( Uri.parse ( "https://wa.me/" + WhatsappMobile + "/?text=" + "" ) );
+            startActivity ( intent );
+        } catch (Exception e) {
+            e.printStackTrace ();
+        }
 
 
     }

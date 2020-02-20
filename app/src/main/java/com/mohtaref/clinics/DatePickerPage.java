@@ -21,6 +21,7 @@ import android.os.Build;
 import android.os.Bundle;
 
 import com.mohtaref.clinics.utility.Constant;
+import com.squareup.picasso.Picasso;
 import com.wdullaer.materialdatetimepicker.date.DatePickerDialog;
 
 import android.os.Handler;
@@ -30,15 +31,23 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.Html;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
+import android.text.method.LinkMovementMethod;
+import android.text.style.ClickableSpan;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
 
 
+import android.view.ViewTreeObserver;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.DatePicker;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -74,12 +83,13 @@ public class DatePickerPage extends AppCompatActivity implements DatePickerDialo
     Button btnGet;
     TextView tvw;
     DatePicker picker;
-
+    ImageView Drprofile;
+    TextView Drprofile_Details,DrprofileName;
     boolean isguest = false;
     LinearLayout profile_side;
     LinearLayout rating_side;
     LinearLayout appointment_side;
-    LinearLayout group_login_real,LLdrprofile,LLproverselecter;
+    LinearLayout group_login_real,LLdrprofile,LLproverselecter,LLTimePickerMain;
     HashMap<String, String> offer;
     Calendar calendar;
     String is_doctor;
@@ -90,11 +100,13 @@ public class DatePickerPage extends AppCompatActivity implements DatePickerDialo
     HashMap<String, String> selected_provider;
     String token;
     ArrayList<Integer> days_off;
-    ArrayList<HashMap<String, String>> providers_list,Dr_Profile;
+    ArrayList<HashMap<String, String>> providers_list;
+    HashMap<String, String> Dr_Profile;
     HashMap<String, String> DrProfile;
     public ArrayList<String> provider_list_en;
     public ArrayList<String> provider_list_ar;
     ProgressDialog pd;
+    TextView tv;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -114,6 +126,13 @@ public class DatePickerPage extends AppCompatActivity implements DatePickerDialo
         getSupportActionBar().setHomeButtonEnabled(true);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_burger_icon_bar);
+        Drprofile_Details=findViewById(R.id.Drprofile_Details);
+        Drprofile=findViewById(R.id.Drprofile);
+
+        DrprofileName=findViewById(R.id.DrprofileName);
+
+
+
 // If you're calling this from a support Fragment
         //for arabic datapicker remove the commented part gg
 //        Locale locale = new Locale("ar");
@@ -124,7 +143,7 @@ public class DatePickerPage extends AppCompatActivity implements DatePickerDialo
 //        createConfigurationContext(config);
 
         //     picker=(DatePicker)findViewById(R.id.datePicker);
-
+        tv = (TextView) findViewById(R.id.more);
         btnGet = (Button) findViewById(R.id.date_pick);
         Calendar c = Calendar.getInstance();
         int mYear = c.get(Calendar.YEAR);
@@ -158,6 +177,7 @@ public class DatePickerPage extends AppCompatActivity implements DatePickerDialo
 
         LLdrprofile= (LinearLayout) findViewById(R.id.LLdrprofile);
         LLproverselecter=(LinearLayout) findViewById(R.id.LLproverselecter);
+        LLTimePickerMain=(LinearLayout) findViewById(R.id.timepickermain);
 
         //Calendar calendar = Calendar.getInstance();
 //        events.add(new EventDay(calendar, R.drawable.ic_person_black_24dp));
@@ -195,7 +215,7 @@ public class DatePickerPage extends AppCompatActivity implements DatePickerDialo
         // menu should be considered as top level destinations.
         days_off = new ArrayList<>();
         providers_list = new ArrayList<>();
-        Dr_Profile=new ArrayList<>();
+        Dr_Profile=new HashMap<String, String>();
 
         new GetProviders().execute();
         new GetDaysoff().execute();
@@ -207,6 +227,85 @@ public class DatePickerPage extends AppCompatActivity implements DatePickerDialo
     public void onDateSet(com.wdullaer.materialdatetimepicker.date.DatePickerDialog view, int year, int monthOfYear, int dayOfMonth) {
 
     }
+
+
+    public static void makeTextViewResizable(final TextView tv, final int maxLine, final String expandText, final boolean viewMore) {
+
+        if (tv.getTag() == null) {
+            tv.setTag(tv.getText());
+        }
+        ViewTreeObserver vto = tv.getViewTreeObserver();
+        vto.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+
+            @SuppressWarnings("deprecation")
+            @Override
+            public void onGlobalLayout() {
+
+                ViewTreeObserver obs = tv.getViewTreeObserver();
+                obs.removeGlobalOnLayoutListener(this);
+                if (maxLine == 0) {
+                    int lineEndIndex = tv.getLayout().getLineEnd(0);
+                    String text = tv.getText().subSequence(0, lineEndIndex - expandText.length() + 1) + " " + expandText;
+                    tv.setText(text);
+                    tv.setMovementMethod(LinkMovementMethod.getInstance());
+                    tv.setText(
+                            addClickablePartTextViewResizable(Html.fromHtml(tv.getText().toString()), tv, maxLine, expandText,
+                                    viewMore), TextView.BufferType.SPANNABLE);
+                } else if (maxLine > 0 && tv.getLineCount() >= maxLine) {
+                    int lineEndIndex = tv.getLayout().getLineEnd(maxLine - 1);
+                    String text = tv.getText().subSequence(0, lineEndIndex - expandText.length() + 1) + " " + expandText;
+                    tv.setText(text);
+                    tv.setMovementMethod(LinkMovementMethod.getInstance());
+                    tv.setText(
+                            addClickablePartTextViewResizable(Html.fromHtml(tv.getText().toString()), tv, maxLine, expandText,
+                                    viewMore), TextView.BufferType.SPANNABLE);
+                } else {
+                    int lineEndIndex = tv.getLayout().getLineEnd(tv.getLayout().getLineCount() - 1);
+                    String text = tv.getText().subSequence(0, lineEndIndex) + " " + expandText;
+                    tv.setText(text);
+                    tv.setMovementMethod(LinkMovementMethod.getInstance());
+                    tv.setText(
+                            addClickablePartTextViewResizable(Html.fromHtml(tv.getText().toString()), tv, lineEndIndex, expandText,
+                                    viewMore), TextView.BufferType.SPANNABLE);
+                }
+            }
+        });
+
+    }
+
+
+    private static SpannableStringBuilder addClickablePartTextViewResizable(final Spanned strSpanned, final TextView tv,
+                                                                            final int maxLine, final String spanableText, final boolean viewMore) {
+        String str = strSpanned.toString();
+        SpannableStringBuilder ssb = new SpannableStringBuilder(strSpanned);
+
+        if (str.contains(spanableText)) {
+            ssb.setSpan(new ClickableSpan() {
+
+                @Override
+                public void onClick(View widget) {
+
+                    if (viewMore) {
+                        tv.setLayoutParams(tv.getLayoutParams());
+                        tv.setText(tv.getTag().toString(), TextView.BufferType.SPANNABLE);
+                        tv.invalidate();
+                        makeTextViewResizable(tv, -1, "View Less", false);
+                    } else {
+                        tv.setLayoutParams(tv.getLayoutParams());
+                        tv.setText(tv.getTag().toString(), TextView.BufferType.SPANNABLE);
+                        tv.invalidate();
+                        makeTextViewResizable(tv, 3, "View More", true);
+                    }
+
+                }
+            }, str.indexOf(spanableText), str.indexOf(spanableText) + spanableText.length(), 0);
+
+        }
+        return ssb;
+
+    }
+
+
 
     public void logout(View view) {
         SharedPreferences.Editor editor = getSharedPreferences("user", Activity.MODE_PRIVATE).edit();
@@ -877,7 +976,7 @@ public class DatePickerPage extends AppCompatActivity implements DatePickerDialo
                         Dr_Profile_ob.put("employeeName_en", DrDetails.getString("employeeName_en"));
                         Dr_Profile_ob.put("employeeName_ar", DrDetails.getString("employeeName_ar"));
                         Dr_Profile_ob.put("image", DrDetails.getString("image"));
-                        Dr_Profile.add(Dr_Profile_ob);
+                        Dr_Profile=Dr_Profile_ob;
                     }
                    // is_doctor
                     //providers
@@ -1005,10 +1104,16 @@ public class DatePickerPage extends AppCompatActivity implements DatePickerDialo
 
                 if(is_doctor.equals("1"))
                 {
-                    provider_spinner.setSelection(1);
-                    LLdrprofile.setVisibility(View.VISIBLE);
-                   // LLproverselecter.setVisibility(View.INVISIBLE);
 
+                    LLdrprofile.setVisibility(View.VISIBLE);
+                    LLTimePickerMain.setGravity(Gravity.NO_GRAVITY);
+                    LLproverselecter.setVisibility(View.GONE);
+                    Drprofile_Details.setText(Dr_Profile.get("AboutUs_ar"));
+                    if(!Dr_Profile.get("image").equals(""))
+                    {
+                        Picasso.get().load(Dr_Profile.get("image")).fit().into(Drprofile);
+                    }
+                    DrprofileName.setText(Dr_Profile.get("employeeName_ar"));
 
                 }
                 else
@@ -1018,6 +1123,10 @@ public class DatePickerPage extends AppCompatActivity implements DatePickerDialo
 
 
 
+                if(Drprofile_Details.getLineCount()>2)
+                {
+                    makeTextViewResizable(Drprofile_Details, 2, "عرض المزيد", true);
+                }
 
             }
             else{
@@ -1064,15 +1173,32 @@ public class DatePickerPage extends AppCompatActivity implements DatePickerDialo
                 //int spinnerPosition = adapter.getPosition("City");
                 if(is_doctor.equals("1"))
                 {
-                    provider_spinner.setSelection(1);
+                    LLTimePickerMain.setGravity(Gravity.NO_GRAVITY);
                     LLdrprofile.setVisibility(View.VISIBLE);
-                   // LLproverselecter.setVisibility(View.INVISIBLE);
+                    LLproverselecter.setVisibility(View.GONE);
+//
+                    Drprofile_Details.setText(Dr_Profile.get("AboutUs_en"));
+                    if(!Dr_Profile.get("image").equals(""))
+                    {
+                        Picasso.get().load(Dr_Profile.get("image")).fit().into(Drprofile);
+
+                    }
+                    DrprofileName.setText(Dr_Profile.get("employeeName_en"));
                 }
                 else
                 {
                     provider_spinner.setSelection(0);
                 }
+
+                if(Drprofile_Details.getLineCount()>2)
+                {
+                    makeTextViewResizable(Drprofile_Details, 2, Drprofile_Details.getLineCount()+"View More", true);
+                }
+
             }
+
+
+
         }
 
 

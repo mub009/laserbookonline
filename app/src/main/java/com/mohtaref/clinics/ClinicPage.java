@@ -1028,6 +1028,12 @@ public class ClinicPage extends AppCompatActivity implements OnMapReadyCallback 
                         S++;
 
                     }
+                    if( category.equals("دكتور")){
+                        Consultation_Skin.add(services_list.get(j));
+                        Add_Consultation=true;
+                        C++;
+                    }
+
 
                 }
                 if(L>0)
@@ -1040,6 +1046,8 @@ public class ClinicPage extends AppCompatActivity implements OnMapReadyCallback 
                     exphead.add("اسنان");
                 if(S>0)
                     exphead.add("بشرة");
+                if(C>0)
+                    exphead.add("دكتور");
             }
             else
             {
