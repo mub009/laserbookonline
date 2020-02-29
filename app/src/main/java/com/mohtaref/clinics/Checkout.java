@@ -903,7 +903,7 @@ public class Checkout extends AppCompatActivity{
                     serviceDetails_ob.put("serviceName_ar", service.getString("serviceName_ar"));
                     serviceDetails_ob.put("duration", service.getString("duration"));
                     serviceDetails_ob.put("cost", service.getString("cost"));
-
+                    serviceDetails_ob.put("totalCost", service.getString("totalCost"));
 
                     serviceDetails=serviceDetails_ob;
 
@@ -1080,7 +1080,7 @@ public class Checkout extends AppCompatActivity{
                 cost_checkout.setText(serviceDetails.get("cost"));
                 String nocomma = serviceDetails.get("postCost");
                 nocomma = nocomma.replace(",", "");
-                total_checkout.setText(nocomma);
+                total_checkout.setText(serviceDetails.get("totalCost"));
 
                 if (offer.get("offerId") != null && !offer.get("offerId").equals("null")) {
 
@@ -1629,6 +1629,7 @@ public class Checkout extends AppCompatActivity{
 
     }
 
+    //cash
     public class Reservation extends AsyncTask<Void, Void, String> {
         @Override
         protected void onPreExecute() {
@@ -1712,20 +1713,6 @@ public class Checkout extends AppCompatActivity{
                 else
                     jsonParam.put("paymentType","cash");
 
-
-//                {
-//                    "clinicId": 2,
-//                        "serviceId": 61,
-//                        "clientId": 14875,
-//                        "offerId": 269,
-//                        "employeeId": 46,
-//                        "appointmentDate": "2019-11-20 09:30:00",
-//                        "totalDuration": 90,
-//                        "cost":"800.00",
-//                        "discount": "37.50",
-//                        "totalCost": "500.00"
-//
-//                }
                 DataOutputStream wr = new DataOutputStream(conn.getOutputStream());
 
                 Log.e("Before sending", "1" + jsonParam.toString());
@@ -1851,7 +1838,7 @@ public class Checkout extends AppCompatActivity{
 
 
     }
-
+    //card
     public class ReservationCredit extends AsyncTask<Void, Void, String> {
         @Override
         protected void onPreExecute() {
@@ -1903,12 +1890,10 @@ public class Checkout extends AppCompatActivity{
                 jsonParam.put("employeeId", provider_hash.get("employeeId"));
                 jsonParam.put("appointmentDate",dateandtime);
                 jsonParam.put("totalDuration", offer.get("duration"));
-                jsonParam.put("cost", serviceDetails.get("postCost"));
-
-
+                jsonParam.put("cost", offer.get("cost"));
                 jsonParam.put("balanceAmount", serviceDetails.get("balanceAmount"));
                 jsonParam.put("ClinicPercentage", serviceDetails.get("ClinicPercentage"));
-                jsonParam.put("postCost", serviceDetails.get("postCost"));
+               // jsonParam.put("postCost", serviceDetails.get("postCost"));
                 if(clinic_details.get("is_partiallyPaidEnable").equals("1")) {
                     jsonParam.put("postCost", serviceDetails.get("postCost"));
                 }
@@ -1917,17 +1902,13 @@ public class Checkout extends AppCompatActivity{
                     jsonParam.put("postCost", serviceDetails.get("postCost"));
                 }
 
-
                 if(offer.get("discount")!=null) {
-//                    jsonParam.put("offerId", offer.get("offerId"));
-//                    jsonParam.put("discount", offer.get("discount"));
-
-                    jsonParam.put("discount",PromoDiscount);
-                    jsonParam.put("offerId", null);
+                   jsonParam.put("offerId", offer.get("offerId"));
+                   jsonParam.put("discount", offer.get("discount"));
                 }
                 else {
                     jsonParam.put("discount",PromoDiscount);
-                    jsonParam.put("offerId", null);
+                    jsonParam.put("offerId", "");
 
                 }
                 String nocomma=serviceDetails.get("postCost");
@@ -2253,9 +2234,12 @@ public class Checkout extends AppCompatActivity{
                 conn.setRequestProperty("Client-Auth-Token", "Bearer" + " " + token);
                 // String offerid=ClinicData.get("offerId");
                 JSONObject jsonParam = new JSONObject();
-
-
-
+                if(offer.get("discount")!=null) {
+                    jsonParam.put("status", "offer");
+                }
+                else {
+                    jsonParam.put("status","service");
+                }
                 jsonParam.put("UserSelectServiceId", offer.get("serviceId"));
                 jsonParam.put("amount",serviceDetails.get("postCost"));
                 jsonParam.put("coupon",Promocode);

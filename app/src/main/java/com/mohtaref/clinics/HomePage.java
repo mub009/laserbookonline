@@ -828,7 +828,7 @@ public class HomePage extends AppCompatActivity implements GoogleApiClient.Conne
             HttpHandlerGet sh = new HttpHandlerGet();
 
             // Making a request to url and getting response
-            String urlget = base_url + "categories";
+            String urlget = base_url + "categoriesv1";
             String jsonStr = sh.makeServiceCall(urlget, token2);
             //Log.e("what is this chips", "idon't know?" + jsonStr);
             // Log.e("what to ", "doooooo");
@@ -908,6 +908,9 @@ public class HomePage extends AppCompatActivity implements GoogleApiClient.Conne
                 cati7 = (TextView) findViewById(R.id.catgori7);
                 cati8 = (TextView) findViewById(R.id.catgori8);
 
+
+                Integer categories_listsize=categories_list.size();
+
                 if(lng.equals("ar")){
                     String cat1 = categories_list.get(0).get("categoryName_ar");
                     String cat2 = categories_list.get(1).get("categoryName_ar");
@@ -928,19 +931,40 @@ public class HomePage extends AppCompatActivity implements GoogleApiClient.Conne
 
                 }
                 else {
-                    String cat1 = categories_list.get(0).get("categoryName_en");
-                    String cat2 = categories_list.get(1).get("categoryName_en");
-                    String cat3 = categories_list.get(2).get("categoryName_en");
-                    String cat4 = categories_list.get(3).get("categoryName_en");
-                    String cat5 = categories_list.get(4).get("categoryName_en");
-                    String cat6 = categories_list.get(5).get("categoryName_en");
 
-                    cati3.setText(cat1);
-                    cati4.setText(cat2);
-                    cati5.setText(cat3);
-                    cati6.setText(cat4);
-                    cati7.setText(cat5);
-                    cati8.setText(cat6);
+
+
+                    if(categories_listsize>1) {
+                        String cat1 = categories_list.get(0).get("categoryName_en");
+                        cati3.setText(cat1);
+                    }
+
+                    if(categories_listsize>2) {
+                        String cat2 = categories_list.get(1).get("categoryName_en");
+                        cati4.setText(cat2);
+                    }
+
+                    if(categories_listsize>3) {
+                        String cat3 = categories_list.get(2).get("categoryName_en");
+                        cati5.setText(cat3);
+                    }
+
+                    if(categories_listsize>4) {
+                        String cat4 = categories_list.get(3).get("categoryName_en");
+                        cati6.setText(cat4);
+                    }
+
+                    if(categories_listsize>5) {
+                            String cat5 = categories_list.get(4).get("categoryName_en");
+                            cati7.setText(cat5);
+                        }
+
+                    if(categories_listsize>6)
+                         {
+                           String cat6 = categories_list.get(5).get("categoryName_en");
+                           cati8.setText(cat6);
+                          }
+
 
                 }
                 ///// set text
@@ -951,19 +975,47 @@ public class HomePage extends AppCompatActivity implements GoogleApiClient.Conne
 
 
                 ///// set icon image
-                String img_cat1_string = categories_list.get(0).get("fullimg");
-                String img_cat2_string = categories_list.get(1).get("fullimg");
-                String img_cat3_string = categories_list.get(2).get("fullimg");
-                String img_cat4_string = categories_list.get(3).get("fullimg");
-                String img_cat5_string = categories_list.get(4).get("fullimg");
-                String img_cat6_string = categories_list.get(5).get("fullimg");
+                if(categories_listsize>0) {
+                    String img_cat1_string = categories_list.get(0).get("fullimg");
+                    img_cati3 =(ImageView)findViewById(R.id.img_btn3);
+                    Picasso.get().load(img_cat1_string).fit().into(img_cati3);
+                }
+                if(categories_listsize>1)
+                {
+                    String img_cat2_string = categories_list.get(1).get("fullimg");
+                    img_cati4 =(ImageView)findViewById(R.id.img_btn4);
+                    Picasso.get().load(img_cat2_string).fit().into(img_cati4);
+                }
 
-                img_cati3 =(ImageView)findViewById(R.id.img_btn3);
-                img_cati4 =(ImageView)findViewById(R.id.img_btn4);
-                img_cati5 =(ImageView)findViewById(R.id.img_btn5);
-                img_cati6 =(ImageView)findViewById(R.id.img_btn6);
-                img_cati7 =(ImageView)findViewById(R.id.img_btn7);
-                img_cati8 =(ImageView)findViewById(R.id.img_btn8);
+                if(categories_listsize>2)
+                {
+                    String img_cat3_string = categories_list.get(2).get("fullimg");
+                    img_cati5 =(ImageView)findViewById(R.id.img_btn5);
+                    Picasso.get().load(img_cat3_string).fit().into(img_cati5);
+
+                }
+                if(categories_listsize>3)
+                {
+                    String img_cat4_string = categories_list.get(3).get("fullimg");
+                    img_cati6 =(ImageView)findViewById(R.id.img_btn6);
+                    Picasso.get().load(img_cat4_string).fit().into(img_cati6);
+                }
+                if(categories_listsize>4)
+                {
+                    String img_cat5_string = categories_list.get(4).get("fullimg");
+                    img_cati7 =(ImageView)findViewById(R.id.img_btn7);
+                    Picasso.get().load(img_cat5_string).fit().into(img_cati7);
+                }
+                if(categories_listsize>5)
+                {
+                    String img_cat6_string = categories_list.get(5).get("fullimg");
+                    img_cati8 =(ImageView)findViewById(R.id.img_btn8);
+                    Picasso.get().load(img_cat6_string).fit().into(img_cati8);
+                }
+
+
+
+
 
 //            Picasso.get()
 //                    .load(img_cat1_string)
@@ -971,12 +1023,9 @@ public class HomePage extends AppCompatActivity implements GoogleApiClient.Conne
 //                    .centerCrop()
 //                    .into(img_cati3);
 
-                Picasso.get().load(img_cat1_string).fit().into(img_cati3);
-                Picasso.get().load(img_cat2_string).fit().into(img_cati4);
-                Picasso.get().load(img_cat3_string).fit().into(img_cati5);
-                Picasso.get().load(img_cat4_string).fit().into(img_cati6);
-                Picasso.get().load(img_cat5_string).fit().into(img_cati7);
-                Picasso.get().load(img_cat6_string).fit().into(img_cati8);
+
+
+
 
             }
         }
@@ -1148,7 +1197,13 @@ public class HomePage extends AppCompatActivity implements GoogleApiClient.Conne
             if(offers_list!=null&&!offers_list.isEmpty()){
                 Log.e("offers no empty","yeah full");
 
-                for(int o=0;o<10;o++){
+                Integer CountOfferLength=offers_list.size();
+                if(CountOfferLength >10)
+                {
+                    CountOfferLength=10;
+                }
+
+                for(int o=0;o<CountOfferLength;o++){
                     part_offers_list.add(offers_list.get(o));
                     numofItmesDown++;
                     Log.e("value of","is "+numofItmesDown);

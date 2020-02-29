@@ -543,7 +543,7 @@ public class ClinicPage extends AppCompatActivity implements OnMapReadyCallback 
             HttpHandlerPostToken sh = new HttpHandlerPostToken();
 
             // Making a request to url and getting response
-            String urlget = base_url + "clinicDetailsV2";
+            String urlget = base_url + "clinicDetailsV3";
 
             Log.e("Before sending", "1" + urlget);
 
@@ -1053,7 +1053,7 @@ public class ClinicPage extends AppCompatActivity implements OnMapReadyCallback 
             {
                 for (int j=0;j<services_list.size();j++){
                     String category=services_list.get(j).get("categoryName_en");
-                    if( category.equals("LASER")){
+                    if( category.equals("Laser")){
                         Services_Laser.add(services_list.get(j));
                         Add_LASER=true;
                         L++;
@@ -1090,7 +1090,7 @@ public class ClinicPage extends AppCompatActivity implements OnMapReadyCallback 
 
                 }
                 if(L>0)
-                    exphead.add("LASER");
+                    exphead.add("Laser");
                 if(F>0)
                     exphead.add("Filler");
                 if(B>0)
