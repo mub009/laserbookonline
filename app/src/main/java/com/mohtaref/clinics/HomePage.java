@@ -62,7 +62,7 @@ import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
-import com.mohtaref.clinics.adapter.List_Menu_Adapter;
+import com.mohtaref.clinics.adapter.ListMenuAdapter;
 import com.mohtaref.clinics.model.MenuModel;
 import com.smarteist.autoimageslider.DefaultSliderView;
 import com.smarteist.autoimageslider.IndicatorAnimations;
@@ -936,11 +936,11 @@ public class HomePage extends AppCompatActivity implements GoogleApiClient.Conne
 
 
                     recyclerView_menu = (RecyclerView) findViewById(R.id.RecyclerViewCategory);
-                    menuAdapter = new List_Menu_Adapter(MenuModelList);
+                    menuAdapter = new ListMenuAdapter(MenuModelList);
                     RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext());
                     recyclerView_menu.setLayoutManager(mLayoutManager);
                     recyclerView_menu.setItemAnimator(new DefaultItemAnimator());
-
+                    recyclerView_menu.setAdapter(menuAdapter);
                     for (int i=0;i<categories_list.size();i++)
                     {
                         MenuModel MenuModel = new MenuModel(categories_list.get(i).get("fullimg"), categories_list.get(i).get("categoryName_en"));

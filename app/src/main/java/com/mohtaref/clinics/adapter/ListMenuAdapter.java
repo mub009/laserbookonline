@@ -10,12 +10,11 @@ import android.widget.TextView;
 
 import com.mohtaref.clinics.R;
 import com.mohtaref.clinics.model.MenuModel;
-import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
-public class List_Menu_Adapter extends RecyclerView.Adapter<List_Menu_Adapter.MyViewHolder> {
-    private List<MenuModel> List_Menu_Adapter;
+public class ListMenuAdapter extends RecyclerView.Adapter<ListMenuAdapter.MyViewHolder> {
+    private List<MenuModel> ListMenuAdapter;
 
     public static  class MyViewHolder extends RecyclerView.ViewHolder
     {
@@ -28,8 +27,8 @@ public class List_Menu_Adapter extends RecyclerView.Adapter<List_Menu_Adapter.My
 
         }
     }
-    public List_Menu_Adapter(List<MenuModel> List_Menu_Adapter) {
-        this.List_Menu_Adapter = List_Menu_Adapter;
+    public ListMenuAdapter(List<MenuModel> ListMenuAdapter) {
+        this.ListMenuAdapter = ListMenuAdapter;
     }
 
 
@@ -46,7 +45,7 @@ public class List_Menu_Adapter extends RecyclerView.Adapter<List_Menu_Adapter.My
 
     @Override
     public void onBindViewHolder(@NonNull MyViewHolder myViewHolder, int position) {
-        List_Menu_Adapter.get(position);
+        ListMenuAdapter.get(position);
 //        myViewHolder.Icon.
 //                Picasso.get().load(img_cat1_string).fit().into(Icon);
           myViewHolder.MenuName.setText("");
@@ -55,7 +54,7 @@ public class List_Menu_Adapter extends RecyclerView.Adapter<List_Menu_Adapter.My
 
     @Override
     public int getItemCount() {
-        return List_Menu_Adapter.size();
+        return ListMenuAdapter.size();
     }
 
 
