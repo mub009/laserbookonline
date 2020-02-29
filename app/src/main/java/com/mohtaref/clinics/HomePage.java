@@ -11,8 +11,6 @@ import android.content.Intent;
 import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.content.res.Configuration;
-import android.content.res.Resources;
 import android.location.Criteria;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -22,7 +20,6 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 
@@ -32,20 +29,21 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
-import android.support.v4.view.ViewCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.NestedScrollView;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 
 
 import android.view.ViewGroup;
-import android.widget.AbsListView;
+import android.widget.Adapter;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
@@ -58,14 +56,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 
-import com.bumptech.glide.Glide;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
-import com.mohtaref.clinics.config.Template;
+import com.mohtaref.clinics.adapter.List_Menu_Adapter;
+import com.mohtaref.clinics.model.MenuModel;
 import com.smarteist.autoimageslider.DefaultSliderView;
 import com.smarteist.autoimageslider.IndicatorAnimations;
 import com.smarteist.autoimageslider.SliderAnimations;
@@ -83,6 +81,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -162,6 +161,9 @@ public class HomePage extends AppCompatActivity implements GoogleApiClient.Conne
     ProgressBar listprog;
     public boolean removed = false;
     public boolean refresh = true;
+    private RecyclerView recyclerView_menu;
+    private Adapter menuAdapter;
+    private List<MenuModel> MenuModelList = new ArrayList<>();;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -932,6 +934,19 @@ public class HomePage extends AppCompatActivity implements GoogleApiClient.Conne
                 }
                 else {
 
+
+                    recyclerView_menu = (RecyclerView) findViewById(R.id.RecyclerViewCategory);
+                    menuAdapter = new List_Menu_Adapter(MenuModelList);
+                    RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext());
+                    recyclerView_menu.setLayoutManager(mLayoutManager);
+                    recyclerView_menu.setItemAnimator(new DefaultItemAnimator());
+
+                    for (int i=0;i<categories_list.size();i++)
+                    {
+                        MenuModel MenuModel = new MenuModel(categories_list.get(i).get("fullimg"), categories_list.get(i).get("categoryName_en"));
+                        MenuModelList.add(MenuModel);
+                    }
+                    menuAdapter.notifyDataSetChanged();
 
 
                     if(categories_listsize>1) {

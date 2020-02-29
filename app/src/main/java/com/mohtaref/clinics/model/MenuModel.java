@@ -1,27 +1,27 @@
 package com.mohtaref.clinics.model;
 
 public class MenuModel {
-    private String key, value;
+    private String image, titleName;
 
- public MenuModel(String key,String value)
+ public MenuModel(String image,String titleName)
  {
-        this.key=key;
-        this.value=value;
+        this.image=image;
+        this.titleName=titleName;
  }
 
-    public String getKey() {
-        return key;
+    public String getImage() {
+        return image;
     }
 
-    public String getValue() {
-        return value;
+    public String getTitleName() {
+        return titleName;
     }
 
-    public void setKey(String key) {
-        this.key = key;
+    public void setImage(String image) {
+        this.image = image;
     }
 
-    public void setValue(String value) {
-        this.value = value;
+    public void setTitleName(String TitleName) {
+        this.titleName = TitleName;
     }
 }
