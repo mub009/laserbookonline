@@ -903,36 +903,36 @@ public class HomePage extends AppCompatActivity implements GoogleApiClient.Conne
                 SharedPreferences pref = getSharedPreferences("Settings", Activity.MODE_PRIVATE);
                 String lng = pref.getString("Mylang", "");
                 Log.e("language", lng);
-                cati3 = (TextView) findViewById(R.id.catgori3);
-                cati4 = (TextView) findViewById(R.id.catgori4);
-                cati5 = (TextView) findViewById(R.id.catgori5);
-                cati6 = (TextView) findViewById(R.id.catgori6);
-                cati7 = (TextView) findViewById(R.id.catgori7);
-                cati8 = (TextView) findViewById(R.id.catgori8);
+//                cati3 = (TextView) findViewById(R.id.catgori3);
+//                cati4 = (TextView) findViewById(R.id.catgori4);
+//                cati5 = (TextView) findViewById(R.id.catgori5);
+//                cati6 = (TextView) findViewById(R.id.catgori6);
+//                cati7 = (TextView) findViewById(R.id.catgori7);
+//                cati8 = (TextView) findViewById(R.id.catgori8);
 
 
-                Integer categories_listsize=categories_list.size();
+//                Integer categories_listsize=categories_list.size();
 
-                if(lng.equals("ar")){
-                    String cat1 = categories_list.get(0).get("categoryName_ar");
-                    String cat2 = categories_list.get(1).get("categoryName_ar");
-                    String cat3 = categories_list.get(2).get("categoryName_ar");
-                    String cat4 = categories_list.get(3).get("categoryName_ar");
-                    String cat5 = categories_list.get(4).get("categoryName_ar");
-                    String cat6 = categories_list.get(5).get("categoryName_ar");
-
-                    // String cat5 = categories_list.get(4).get("categoryName_ar");
-
-                    cati3.setText(cat1);
-                    cati4.setText(cat2);
-                    cati5.setText(cat3);
-                    cati6.setText(cat4);
-                    cati7.setText(cat5);
-                    cati8.setText(cat6);
-
-
-                }
-                else {
+//                if(lng.equals("ar")){
+//                    String cat1 = categories_list.get(0).get("categoryName_ar");
+//                    String cat2 = categories_list.get(1).get("categoryName_ar");
+//                    String cat3 = categories_list.get(2).get("categoryName_ar");
+//                    String cat4 = categories_list.get(3).get("categoryName_ar");
+//                    String cat5 = categories_list.get(4).get("categoryName_ar");
+//                    String cat6 = categories_list.get(5).get("categoryName_ar");
+//
+//                    // String cat5 = categories_list.get(4).get("categoryName_ar");
+//
+//                    cati3.setText(cat1);
+//                    cati4.setText(cat2);
+//                    cati5.setText(cat3);
+//                    cati6.setText(cat4);
+//                    cati7.setText(cat5);
+//                    cati8.setText(cat6);
+//
+//
+//                }
+//                else {
 
 
                     recyclerView_menu = (RecyclerView) findViewById(R.id.RecyclerViewCategory);
@@ -943,10 +943,20 @@ public class HomePage extends AppCompatActivity implements GoogleApiClient.Conne
                     recyclerView_menu.setAdapter((RecyclerView.Adapter) menuAdapter);
                     for (int i=0;i<categories_list.size();i++)
                     {
-                        MenuModel MenuModel = new MenuModel(categories_list.get(i).get("fullimg"), categories_list.get(i).get("categoryName_en"));
-                        MenuModelList.add(MenuModel);
+                        if(lng.equals("ar")) {
+                            MenuModel MenuModel = new MenuModel(categories_list.get(i).get("fullimg"), categories_list.get(i).get("categoryName_ar"),categories_list.get(i).get("categoryId"));
+                            MenuModelList.add(MenuModel);
+                        }
+                        else
+                        {
+                            MenuModel MenuModel = new MenuModel(categories_list.get(i).get("fullimg"), categories_list.get(i).get("categoryName_en"),categories_list.get(i).get("categoryId"));
+                            MenuModelList.add(MenuModel);
+                        }
+
                     }
                     ((RecyclerView.Adapter) menuAdapter).notifyDataSetChanged();
+
+
 
 
 //                    if(categories_listsize>1) {
@@ -981,7 +991,7 @@ public class HomePage extends AppCompatActivity implements GoogleApiClient.Conne
 //                          }
 
 
-                }
+               // }
                 ///// set text
 
 

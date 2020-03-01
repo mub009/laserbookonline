@@ -155,13 +155,8 @@ public class Clinics_List_Laser extends AppCompatActivity implements NavigationV
         SharedPreferences pref = getSharedPreferences("Settings", Activity.MODE_PRIVATE);
         String lng = pref.getString("Mylang", "");
         Log.e("language", lng);
-        if (lng.equals("ar"))
-            category_name.setText(category.get("categoryName_ar"));
-        else
-            category_name.setText(category.get("categoryName_en"));
-
+        category_name.setText(category.get("categoryName"));
         String img_string = category.get("fullimg");
-
         category_image = (ImageView) findViewById(R.id.Category_image);
         Picasso.get().load(img_string).into(category_image);
 
