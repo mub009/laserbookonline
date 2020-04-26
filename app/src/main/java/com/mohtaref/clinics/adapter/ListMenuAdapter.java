@@ -15,6 +15,7 @@ import android.widget.Toast;
 
 import com.mohtaref.clinics.Clinics_List_Laser;
 import com.mohtaref.clinics.HomePage;
+import com.mohtaref.clinics.NearByActivity;
 import com.mohtaref.clinics.R;
 import com.mohtaref.clinics.model.MenuModel;
 import com.squareup.picasso.Picasso;
@@ -91,20 +92,42 @@ public class ListMenuAdapter extends RecyclerView.Adapter<ListMenuAdapter.MyView
 
     @Override
     public void onBindViewHolder(@NonNull MyViewHolder myViewHolder, int position) {
-         Picasso.get().load(ListMenuAdapter.get(position).getImage()).fit().into(myViewHolder.Icon);
-         myViewHolder.MenuName.setText(ListMenuAdapter.get(position).getTitleName());
-         myViewHolder.LLCategory.setOnClickListener(new View.OnClickListener() {
-                                                       @Override
-                                                       public void onClick(View v) {
-                                                           Intent i = new Intent(v.getContext(), Clinics_List_Laser.class);
-                                                           HashMap<String, String> hashMap = new HashMap<String, String>();
-                                                           hashMap.put("categoryId", ListMenuAdapter.get(position).getCategoryId());
-                                                           hashMap.put("categoryName",ListMenuAdapter.get(position).getTitleName());
-                                                           i.putExtra("category", hashMap);
-                                                           v.getContext().startActivity(i);
+
+        if(position==0)
+        {
+            myViewHolder.Icon.setImageResource(R.drawable.near);
+            myViewHolder.MenuName.setText(ListMenuAdapter.get(position).getTitleName());
+
+        }
+        else {
+            Picasso.get().load(ListMenuAdapter.get(position).getImage()).fit().into(myViewHolder.Icon);
+            myViewHolder.MenuName.setText(ListMenuAdapter.get(position).getTitleName());
+        }
+            myViewHolder.LLCategory.setOnClickListener(new View.OnClickListener() {
+                                                           @Override
+                                                           public void onClick(View v) {
+                                                               if(position==0)
+                                                               {
+
+                                                                    Intent i = new Intent(v.getContext(), NearByActivity.class);
+                                                                           i.putExtra("lat", ListMenuAdapter.get(position).getLat());
+                                                                           i.putExtra("lng", ListMenuAdapter.get(position).getLog());
+                                                                           v.getContext().startActivity(i);
+    //                                                                   v.getContext().finishAffinity();
+    //                                                                           System.exit(0);
+                                                               }
+                                                               else {
+                                                                   Intent i = new Intent(v.getContext(), Clinics_List_Laser.class);
+                                                                   HashMap<String, String> hashMap = new HashMap<String, String>();
+                                                                   hashMap.put("categoryId", ListMenuAdapter.get(position).getCategoryId());
+                                                                   hashMap.put("categoryName", ListMenuAdapter.get(position).getTitleName());
+                                                                   i.putExtra("category", hashMap);
+                                                                   v.getContext().startActivity(i);
+                                                               }
+                                                           }
                                                        }
-                                                   }
-        );
+            );
+
     }
 
 

@@ -12,8 +12,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <uses-permission android:name="android.permission.CALL_PHONE" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" /> <!-- <uses-permission android:name="android.permission.CALL_PHONE" /> -->
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
@@ -29,7 +28,22 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:replace="android:appComponentFactory,allowBackup">
-        <activity android:name=".common.NoData"></activity>
+        <activity android:name=".fragment.ProfileFragment" />
+        <activity
+            android:name=".GiftShare"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".GiftPaymentPage"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".GiftIntroductionPage"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait" />
+        <activity android:name=".common.NoData" />
         <activity android:name=".popupDialog" />
 
         <uses-library
@@ -80,8 +94,8 @@
         <activity
             android:name=".Splash_Screen"
             android:configChanges="orientation"
-            android:screenOrientation="portrait"
             android:launchMode="singleTask"
+            android:screenOrientation="portrait"
             android:theme="@style/SplashThem">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -117,6 +131,7 @@
                     android:scheme="https" />
             </intent-filter>
         </activity>
+        <activity android:name=".ui.gallery.GalleryFragment" />
         <activity
             android:name=".config.Template"
             android:configChanges="orientation"

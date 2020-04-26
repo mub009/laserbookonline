@@ -211,6 +211,8 @@
     <string name="privacypolicy">Privacy Policy</string>
     <string name="ok">Ok</string>
     <string name="save">Save</string>
+    <string name="app_continue">continue</string>
+
     <!--login-->
     <string name="password">Password</string>
     <string name="login">Login</string>
@@ -298,6 +300,7 @@
     <string name="cost">Cost</string>
     <string name="partiallypaidAmount">Partially Paid Amount</string>
     <string name="balanceAmount">Balance Amount</string>
+    <string name="promoDiscount">Promo Discount</string>
     <string name="total">Total</string>
     <string name="discount">Discount</string>
     <string name="duration">Duration</string>
@@ -382,6 +385,7 @@ Our service is free of charge for clients, we will not charge you for our bookin
     <string name="title_activity_clinic_page_rating_list">ClinicPageRatingList</string>
 
     <string name="pick_date">Pick Date</string>
+    <string name="openticket">Open Ticket</string>
     <string name="distance">Distance</string>
 
 </resources>

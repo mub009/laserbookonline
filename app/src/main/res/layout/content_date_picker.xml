@@ -76,21 +76,41 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:orientation="vertical">
+        android:orientation="horizontal">
 
         <Button
             android:id="@+id/date_pick"
-            android:layout_width="match_parent"
+            android:layout_width="200dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="5dp"
             android:layout_marginEnd="5dp"
-            android:layout_marginBottom="50dp"
+
             android:background="@drawable/rounded_corner_pick_date_datepage"
             android:gravity="center"
             android:text="@string/pick_date"
             android:textColor="@color/white" />
 
+        <Button
+            android:id="@+id/openTicket"
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="5dp"
+            android:layout_marginEnd="5dp"
+
+            android:background="@drawable/rounded_corner_pick_date_datepage"
+            android:gravity="center"
+            android:text="@string/openticket"
+            android:textColor="@color/white" />
+
+
+
+
     </LinearLayout>
+
+
+
+
+
 
     <LinearLayout
         android:id="@+id/LLproverselecter"
@@ -123,5 +143,7 @@
 
         </android.support.design.widget.TextInputLayout>
     </LinearLayout>
+
+
 
 </LinearLayout>

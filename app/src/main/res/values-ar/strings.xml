@@ -5,6 +5,7 @@
     <string name="privacypolicy">سياسة الخصوصية</string>
     <string name="ok">موافق</string>
     <string name="save">حفظ</string>
+    <string name="app_continue">استمر</string>
     <!--login-->
     <string name="password">كلمة المرور</string>
     <string name="login">تسجيل الدخول</string>
@@ -93,6 +94,7 @@
     <string name="duration">المدة</string>
     <string name="name">الاسم</string>
     <string name="partiallypaidAmount">المبلغ المدفوع جزئيا</string>
+    <string name="promoDiscount">خصم الترويجي</string>
     <string name="balanceAmount">قيمة المبلغ</string>
     <string name="provider">مقدم الخدمة</string>
     <string name="gender">الجنس</string>
@@ -247,13 +249,14 @@
             \n\nفي حال وجود اي مخاوف او شكاوي فإن قنوات التواصل متوفرة والموضحة في " وسائل الاتصال " و نسعد بتقديم الخدمة المطلوبة.
             \n\n;</string>
 
+    <string name="title_activity_clinic_page_rating_list">ClinicPageRatingList</string>
 
     <!-- End of Strings related to login page -->
     <string name="view_all_ratings">مشاهدة جميع التقيمات</string>
     <string name="get_directions">احصل على الاتجاهات</string>
     <string name="pick_date">اختر تاريخ</string>
     <string name="distance">المسافة</string>
-
+    <string name="openticket">Open Ticket</string>
 
     <string-array name="countries_array">
         <item>Nationality/الجنسية</item>

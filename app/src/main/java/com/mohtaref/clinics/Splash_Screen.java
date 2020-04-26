@@ -3,6 +3,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.content.res.Resources;
@@ -21,9 +22,16 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 
+import com.google.android.play.core.appupdate.AppUpdateInfo;
+import com.google.android.play.core.appupdate.AppUpdateManager;
+import com.google.android.play.core.appupdate.AppUpdateManagerFactory;
+import com.google.android.play.core.install.model.AppUpdateType;
+import com.google.android.play.core.install.model.UpdateAvailability;
+import com.google.android.play.core.tasks.Task;
 import com.mohtaref.clinics.utility.Constant;
 
 import org.json.JSONArray;
@@ -55,8 +63,11 @@ HashMap<String,String> version_app;
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+
     Branch.getInstance().initSession(branchReferralInitListener, getIntent() != null ?
             getIntent().getData() : null, this);
+
+
 //        version_name= BuildConfig.VERSION_NAME;
 //        version_code=BuildConfig.VERSION_CODE;
 //        if(isConnected(this))
@@ -83,12 +94,64 @@ HashMap<String,String> version_app;
     }
 
 
+    public void Appupdation()
+    {
+        AppUpdateManager appUpdateManager = AppUpdateManagerFactory.create(Splash_Screen.this);
+        // Returns an intent object that you use to check for an update.
+        Task<AppUpdateInfo> appUpdateInfoTask = appUpdateManager.getAppUpdateInfo();
+
+// Checks that the platform will allow the specified type of update.
+        appUpdateInfoTask.addOnSuccessListener(appUpdateInfo -> {
+            if (appUpdateInfo.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE
+                    // For a flexible update, use AppUpdateType.FLEXIBLE
+                    && appUpdateInfo.isUpdateTypeAllowed(AppUpdateType.IMMEDIATE)) {
+
+                try {
+                    appUpdateManager.startUpdateFlowForResult(
+                            // Pass the intent that is returned by 'getAppUpdateInfo()'.
+                            appUpdateInfo,
+                            // Or 'AppUpdateType.FLEXIBLE' for flexible updates.
+                            AppUpdateType.IMMEDIATE,
+                            // The current activity making the update request.
+                            this,
+                            // Include a request code to later monitor this update request.
+                            100);
+                } catch (IntentSender.SendIntentException e) {
+                    e.printStackTrace();
+                }
+                // Request the update.
+            }
+        });
+    }
 
 
     @Override public void onStart() {
         super.onStart();
-        Branch.getInstance().initSession(branchReferralInitListener, getIntent() != null ?
-                getIntent().getData() : null, this);
+        // listener (within Main Activity's onStart)
+        Branch.getInstance().initSession(new Branch.BranchReferralInitListener() {
+            @Override
+            public void onInitFinished(JSONObject referringParams, BranchError error) {
+                if (error == null) {
+
+                    // option 1: log data
+                    Log.i("BRANCH SDK", referringParams.toString());
+
+                    // option 2: save data to be used later
+                    SharedPreferences preferences = Splash_Screen.this.getSharedPreferences("MyPreferences", Context.MODE_PRIVATE);
+                    preferences.edit().putString("branchData", referringParams.toString()).apply();
+
+                    // option 3: navigate to page
+                    Intent intent = new Intent(Splash_Screen.this, HomePage.class);
+                    startActivity(intent);
+
+                    // option 4: display data
+                    Toast.makeText(Splash_Screen.this, referringParams.toString(), Toast.LENGTH_LONG).show();
+
+                } else {
+                    Log.i("BRANCH SDK", error.getMessage());
+                }
+            }
+        }, this.getIntent().getData(), this);
     }
     @Override
     protected void onNewIntent(Intent intent) {
@@ -103,6 +166,15 @@ HashMap<String,String> version_app;
                 @Override
                 public void onInitFinished(@Nullable JSONObject referringParams, @Nullable BranchError error) {
 
+                    try {
+                        String navLink=referringParams.get("$canonical_identifier").toString();
+                        if(navLink.equals("inviting"));
+                        {
+
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
                 }
 
 
@@ -127,233 +199,9 @@ HashMap<String,String> version_app;
             return false;
     }
 
-    public class CheckVersion extends AsyncTask<Void, Void, Void> {
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            loadlocal();
-
-
-        }
-
-        @Override
-        protected Void doInBackground(Void... arg0) {
-//            final FormActivity formobject=new FormActivity();
-
-            // Making a request to url and getting response
-            String urlget = base_url + "version";
-            String jsonStr = null;
-
-            // String jsonStr = sh.makeServiceCall(urlget, token, "", "");
-            // String response = null;
-            try {
-                URL url = new URL(urlget);
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("GET");
-                conn.setRequestProperty("Content-Type", "application/json");
-                // String offerid=ClinicData.get("offerId");
-
-
-                // read the response
-                InputStream in = new BufferedInputStream(conn.getInputStream());
-                jsonStr = convertStreamToString(in);
-            } catch (MalformedURLException e) {
-                Log.e("", "MalformedURLException: " + e.getMessage());
-            } catch (ProtocolException e) {
-                Log.e("", "ProtocolException: " + e.getMessage());
-            } catch (IOException e) {
-                Log.e("", "IOException: " + e.getMessage());
-            } catch (Exception e) {
-                Log.e("", "Exception: " + e.getMessage());
-            }
-            //   return response;
-            Log.e("gg mynigga","yeaah");
-            Log.e("is offers :", "Response from url countries: " + jsonStr);
-            if (jsonStr != null) {
-                try {
-                    JSONObject c = new JSONObject(jsonStr);
-                    String versionId = c.getString("versionId");
-
-                    String android = c.getString("android");
 
 
 
-                        HashMap<String, String> offer_ob = new HashMap<>();
-
-                        // adding each child node to HashMap key => value
-                        offer_ob.put("versionId", versionId);
-                        offer_ob.put("android", android);
-
-
-
-                       version_app=offer_ob;
-
-
-
-
-
-
-
-                } catch (final JSONException e) {
-                    Log.e("", "Json parsing error: " + e.getMessage());
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-
-                            //  formobject.buildDialog(R.style.DialogAnimation, "NO Records found","ok");
-
-
-                        }
-                    });
-
-                }
-
-            } else {
-                Log.e("", "Couldn't get json from server.");
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-
-//                        Toast.makeText(getApplicationContext(),
-//                                "Couldn't get data from server. Check your internet connection or try later",
-//                                Toast.LENGTH_LONG).show();
-
-                    }
-                });
-            }
-
-
-            return null;
-        }
-
-
-        @Override
-        protected void onPostExecute(Void result) {
-            super.onPostExecute(result);
-            Log.e("version local is:"," "+BuildConfig.VERSION_NAME);
-
-            Log.e("version from server is:"," "+version_app.get("android"));
-            int version_value=compareVersionNames(BuildConfig.VERSION_NAME,version_app.get("android").trim());
-            if(version_value==-1){
-                alert_message_guest(getResources().getString(R.string.UPD_TITLE),getResources().getString(R.string.UPD_BODY),getResources().getString(R.string.UPD_OK));
-
-            }
-            else if(version_value==0){
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-
-                        Intent intent=new Intent(Splash_Screen.this,LoginActivity.class);
-                        startActivity(intent);
-                        overridePendingTransition(0, 0);
-                        finish();
-
-                    }
-                }, 1500);
-            }
-            else if(version_value==1){
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-
-                        Intent intent=new Intent(Splash_Screen.this,LoginActivity.class);
-                        startActivity(intent);
-                        overridePendingTransition(0, 0);
-                        finish();
-
-                    }
-                }, 1500);
-            }
-
-
-        }
-
-    }
-
-
-    public void alert_message_guest(String title,String body,String Button){
-        AlertDialog alertDialog = new AlertDialog.Builder(this)
-                .setTitle(title)
-                .setMessage(body)
-                .setCancelable(false)
-                .setPositiveButton(Button, null) //Set to null. We override the onclick
-                .create();
-        alertDialog.setOnShowListener(new DialogInterface.OnShowListener() {
-
-            @Override
-            public void onShow(DialogInterface dialogInterface) {
-
-                android.widget.Button button = ((AlertDialog) alertDialog).getButton(AlertDialog.BUTTON_POSITIVE);
-                button.setOnClickListener(new View.OnClickListener() {
-
-                    @Override
-                    public void onClick(View view) {
-                        // TODO Do something
-                        final String appPackageName = getPackageName(); // getPackageName() from Context or Activity object
-                        try {
-                            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + appPackageName)));
-                        } catch (android.content.ActivityNotFoundException anfe) {
-                            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + appPackageName)));
-                        }
-                        //Dismiss once everything is OK.
-                      //  alertDialog.dismiss();
-                    }
-                });
-            }
-        });
-        alertDialog.show();
-    }
-    private String convertStreamToString(InputStream is) {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-        StringBuilder sb = new StringBuilder();
-
-        String line;
-        try {
-            while ((line = reader.readLine()) != null) {
-                sb.append(line).append('\n');
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                is.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        return sb.toString();
-    }
-
-    public int compareVersionNames(String oldVersionName, String newVersionName) {
-        int res = 0;
-
-        String[] oldNumbers = oldVersionName.split("\\.");
-        String[] newNumbers = newVersionName.split("\\.");
-
-        // To avoid IndexOutOfBounds
-        int maxIndex = Math.min(oldNumbers.length, newNumbers.length);
-
-        for (int i = 0; i < maxIndex; i ++) {
-            int oldVersionPart = Integer.valueOf(oldNumbers[i]);
-            int newVersionPart = Integer.valueOf(newNumbers[i]);
-
-            if (oldVersionPart < newVersionPart) {
-                res = -1;
-                break;
-            } else if (oldVersionPart > newVersionPart) {
-                res = 1;
-                break;
-            }
-        }
-
-        // If versions are the same so far, but they have different length...
-        if (res == 0 && oldNumbers.length != newNumbers.length) {
-            res = (oldNumbers.length > newNumbers.length)?1:-1;
-        }
-
-        return res;
-    }
     public void setLocale(String lang) {
         // get language return 2 first letters lower case of the language //// in the other hand get display language return the name of the language
         String CurrentLang = Locale.getDefault().getDisplayLanguage();

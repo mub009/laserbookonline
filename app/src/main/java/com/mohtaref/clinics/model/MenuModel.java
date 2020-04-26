@@ -1,13 +1,33 @@
 package com.mohtaref.clinics.model;
 
 public class MenuModel {
-    private String image, titleName,CategoryId;
-    public MenuModel(String image, String titleName, String CategoryId)
-     {
+    private String image, titleName,CategoryId,lat,log;
+
+    public MenuModel(String image, String titleName, String CategoryId, String lat, String log)
+    {
         this.image=image;
         this.titleName=titleName;
         this.CategoryId=CategoryId;
-     }
+        this.lat=lat;
+        this.log=log;
+
+    }
+
+    public String getLat() {
+        return lat;
+    }
+
+    public void setLat(String lat) {
+        this.lat = lat;
+    }
+
+    public String getLog() {
+        return log;
+    }
+
+    public void setLog(String log) {
+        this.log = log;
+    }
 
     public String getCategoryId() {
         return CategoryId;

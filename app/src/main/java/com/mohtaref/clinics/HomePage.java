@@ -4,7 +4,9 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -20,6 +22,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 
@@ -38,11 +41,14 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 
 
 import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Adapter;
 import android.widget.AdapterView;
 import android.widget.Button;
@@ -51,10 +57,13 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.widget.PopupWindow;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+
+import androidx.annotation.RequiresApi;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -62,8 +71,22 @@ import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.play.core.appupdate.AppUpdateInfo;
+import com.google.android.play.core.appupdate.AppUpdateManager;
+import com.google.android.play.core.appupdate.AppUpdateManagerFactory;
+import com.google.android.play.core.install.model.AppUpdateType;
+import com.google.android.play.core.install.model.UpdateAvailability;
+import com.google.android.play.core.tasks.Task;
 import com.mohtaref.clinics.adapter.ListMenuAdapter;
+import com.mohtaref.clinics.adapter.OfferAdapter;
+import com.mohtaref.clinics.common.AppReview;
+import com.mohtaref.clinics.config.Template;
+import com.mohtaref.clinics.fragment.HomePageFragment;
 import com.mohtaref.clinics.model.MenuModel;
+import com.mohtaref.clinics.model.OfferModel;
+import com.mohtaref.clinics.ui.gallery.GalleryFragment;
+import com.mohtaref.clinics.utility.PopUpClass;
+import com.mohtaref.clinics.utility.RecyclerViewPaginationListener;
 import com.smarteist.autoimageslider.DefaultSliderView;
 import com.smarteist.autoimageslider.IndicatorAnimations;
 import com.smarteist.autoimageslider.SliderAnimations;
@@ -75,18 +98,37 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.ProtocolException;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import io.branch.indexing.BranchUniversalObject;
+import io.branch.referral.Branch;
+import io.branch.referral.BranchError;
+import io.branch.referral.SharingHelper;
+import io.branch.referral.util.ContentMetadata;
+import io.branch.referral.util.LinkProperties;
+import io.branch.referral.util.ShareSheetStyle;
+
 import static com.mohtaref.clinics.utility.Constant.APIbaseLink;
+import static com.mohtaref.clinics.utility.Constant.AppURL;
+import static com.mohtaref.clinics.utility.Constant.POPupSharedPreferencesKey;
 import static com.mohtaref.clinics.utility.Constant.WhatsappMobile;
+import static com.mohtaref.clinics.utility.RecyclerViewPaginationListener.PAGE_START;
 
 public class HomePage extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener, com.google.android.gms.location.LocationListener {
@@ -108,22 +150,6 @@ public class HomePage extends AppCompatActivity implements GoogleApiClient.Conne
     ArrayList<HashMap<String, String>> part_offers_list;
     public boolean pagesize = false;
     boolean downTriggerd = true;
-    TextView cati1;
-    TextView cati2;
-    TextView cati3;
-    TextView cati4;
-    TextView cati5;
-    TextView cati6;
-    TextView cati7;
-    TextView cati8;
-    ImageView img_cati1;
-    ImageView img_cati2;
-    ImageView img_cati3;
-    ImageView img_cati4;
-    ImageView img_cati5;
-    ImageView img_cati6;
-    ImageView img_cati7;
-    ImageView img_cati8;
     ListView list;
     double latitude = 0.0;
     double longitude = 0.0;
@@ -161,13 +187,88 @@ public class HomePage extends AppCompatActivity implements GoogleApiClient.Conne
     ProgressBar listprog;
     public boolean removed = false;
     public boolean refresh = true;
-    private RecyclerView recyclerView_menu;
-    private Adapter menuAdapter;
-    private List<MenuModel> MenuModelList = new ArrayList<>();;
+    private RecyclerView recyclerView_menu,recyclerView_offer;
+    private Adapter menuAdapter,offerAdapter;
+    private List<MenuModel> MenuModelList = new ArrayList<>();
+    private List<OfferModel> OfferModelList=new ArrayList<>();
+    private static final String TAG = HttpHandlerPostToken.class.getSimpleName();
+    HashMap<String, String> GeneralPopup,ClinicPopup= new HashMap();
+    JSONObject popup;
+    private int currentPage = PAGE_START;
+    private boolean isLastPage = false;
+    private int totalPage = 10;
+    int itemCount = 0;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         context = getApplicationContext();
+        // Creates instance of the manager.
+
+
+
+
+//
+//
+//        BranchUniversalObject buo = new BranchUniversalObject()
+//                .setCanonicalIdentifier("inviting")
+//                .setTitle("sssss")
+//                .setContentDescription("My Content Description")
+//                .setContentImageUrl("https://lorempixel.com/400/400")
+//                .setContentIndexingMode(BranchUniversalObject.CONTENT_INDEX_MODE.PUBLIC)
+//                .setLocalIndexMode(BranchUniversalObject.CONTENT_INDEX_MODE.PUBLIC)
+//                .setContentMetadata(new ContentMetadata().addCustomMetadata("key1", "value1"));
+//
+//
+//        LinkProperties lp = new LinkProperties()
+//                .setChannel("facebook")
+//                .setFeature("sharing")
+//                .setCampaign("content 123 launch")
+//                .setStage("new user")
+//                .addControlParameter("$desktop_url", "http://example.com/home")
+//                .addControlParameter("custom", "data")
+//                .addControlParameter("custom_random", Long.toString(Calendar.getInstance().getTimeInMillis()));
+//
+//        buo.generateShortUrl(this, lp, new Branch.BranchLinkCreateListener() {
+//            @Override
+//            public void onLinkCreate(String url, BranchError error) {
+//                if (error == null) {
+//                    Log.i("BRANCH SDK", "got my Branch link to share: " + url);
+//                }
+//            }
+//        });
+
+
+//
+//        ShareSheetStyle ss = new ShareSheetStyle(this, "Check this out!", "This stuff is awesome: ")
+//                .setCopyUrlStyle(ContextCompat.getDrawable(this, android.R.drawable.ic_menu_send), "Copy", "Added to clipboard")
+//                .setMoreOptionStyle(ContextCompat.getDrawable(this, android.R.drawable.ic_menu_search), "Show more")
+//                .addPreferredSharingOption(SharingHelper.SHARE_WITH.FACEBOOK)
+//                .addPreferredSharingOption(SharingHelper.SHARE_WITH.EMAIL)
+//                .addPreferredSharingOption(SharingHelper.SHARE_WITH.MESSAGE)
+//                .addPreferredSharingOption(SharingHelper.SHARE_WITH.HANGOUT)
+//                .setAsFullWidthStyle(true)
+//                .setSharingTitle("Share With");
+//
+//        buo.showShareSheet(this, lp,  ss,  new Branch.BranchLinkShareListener() {
+//            @Override
+//            public void onShareLinkDialogLaunched() {
+//            }
+//            @Override
+//            public void onShareLinkDialogDismissed() {
+//            }
+//            @Override
+//            public void onLinkShareResponse(String sharedLink, String sharedChannel, BranchError error) {
+//            }
+//            @Override
+//            public void onChannelSelected(String channelName) {
+//            }
+//        });
+
+
+
+//        AppReview AppReviewobj=new AppReview();
+//        AppReviewobj.showRateDialogForRate(HomePage.this);
         locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
         gps_enabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
         if (gps_enabled) {
@@ -213,11 +314,11 @@ public class HomePage extends AppCompatActivity implements GoogleApiClient.Conne
         // Locale.setDefault(new Locale("en"));
         setContentView(R.layout.activity_home_page);
         listprog = (ProgressBar) findViewById(R.id.listprogress);
-        TextView cati1 = (TextView) findViewById(R.id.catgori1);
-        TextView cati3 = (TextView) findViewById(R.id.catgori3);
-        TextView cati4 = (TextView) findViewById(R.id.catgori4);
-        TextView cati5 = (TextView) findViewById(R.id.catgori5);
-        TextView cati6 = (TextView) findViewById(R.id.catgori6);
+        //TextView cati1 = (TextView) findViewById(R.id.catgori1);
+//        TextView cati3 = (TextView) findViewById(R.id.catgori3);
+//        TextView cati4 = (TextView) findViewById(R.id.catgori4);
+//        TextView cati5 = (TextView) findViewById(R.id.catgori5);
+//        TextView cati6 = (TextView) findViewById(R.id.catgori6);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         loadlocal();
@@ -241,8 +342,6 @@ public class HomePage extends AppCompatActivity implements GoogleApiClient.Conne
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        Log.e("user token is :", token);
-        Log.e("user is guest :", "" + isguest);
 
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
@@ -270,12 +369,19 @@ public class HomePage extends AppCompatActivity implements GoogleApiClient.Conne
 
     }
 
-    public void tasks() {
-
+        public void tasks() {
         new GetCategories().execute();
-
         new offers().execute();
+        new popup().execute();
     }
+
+//    public void popupmessage(Context context)
+//    {
+//        PopUpClass popUpClass = new PopUpClass();
+//        popUpClass.showPopupWindow(context);
+//    }
+
+
     public boolean isConnected(Context context) {
 
         ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -427,53 +533,26 @@ public class HomePage extends AppCompatActivity implements GoogleApiClient.Conne
 
     }
 
-    public void btn8(View view) {
-        Intent i = new Intent(HomePage.this, Clinics_List_Laser.class);
-        i.putExtra("category", categories_list.get(5));
-        startActivity(i);
-    }
-
-    public void btn7(View view) {
-        Intent i = new Intent(HomePage.this, Clinics_List_Laser.class);
-        i.putExtra("category", categories_list.get(4));
-        startActivity(i);
-    }
-
-    public void btn6(View view) {
-        Intent i = new Intent(HomePage.this, Clinics_List_Laser.class);
-        i.putExtra("category", categories_list.get(3));
-        startActivity(i);
-    }
-
-    public void btn5(View view) {
-        Intent i = new Intent(HomePage.this, Clinics_List_Laser.class);
-        i.putExtra("category", categories_list.get(2));
-        startActivity(i);
-    }
-
-    public void btn4(View view) {
-        Intent i = new Intent(HomePage.this, Clinics_List_Laser.class);
-        i.putExtra("category", categories_list.get(1));
-        startActivity(i);
-    }
-
-    public void btn3(View view) {
-        Intent i = new Intent(HomePage.this, Clinics_List_Laser.class);
-        i.putExtra("category", categories_list.get(0));
-        startActivity(i);
-    }
     public void share_app(View view) {
-        try {
-            Intent shareIntent = new Intent(Intent.ACTION_SEND);
-            shareIntent.setType("text/plain");
-            shareIntent.putExtra(Intent.EXTRA_SUBJECT, "My application name");
-            String shareMessage;
-            shareMessage =  "https://labookingonline.app.link/3H1D5xI9w3";
-            shareIntent.putExtra(Intent.EXTRA_TEXT, shareMessage);
-            startActivity(Intent.createChooser(shareIntent, "Choose One"));
-        } catch(Exception e) {
-            //e.toString();
-        }
+//        try {
+//            Intent shareIntent = new Intent(Intent.ACTION_SEND);
+//            shareIntent.setType("text/plain");
+//            shareIntent.putExtra(Intent.EXTRA_SUBJECT, "My application name");
+//            String shareMessage;
+//            shareMessage =  "https://labookingonline.app.link/3H1D5xI9w3";
+//            shareIntent.putExtra(Intent.EXTRA_TEXT, shareMessage);
+//            startActivity(Intent.createChooser(shareIntent, "Choose One"));
+//        } catch(Exception e) {
+//            //e.toString();
+//        }
+       try {
+           Intent i = new Intent(getApplicationContext(), Template.class);
+           i.putExtra("transaction_id", "8686695");
+           startActivity(i);
+           finishAffinity();
+       }catch (Exception e) {
+           e.printStackTrace ();
+       }
 
     }
 
@@ -597,9 +676,11 @@ public class HomePage extends AppCompatActivity implements GoogleApiClient.Conne
     }
 
     public void Terms_page(View view) {
-        Intent i = new Intent(HomePage.this, Terms.class);
-        startActivity(i);
-        overridePendingTransition(0, 0);
+        SharedPreferences pref=getSharedPreferences("Settings",Activity.MODE_PRIVATE);
+        String lng=pref.getString("Mylang","");
+        Uri uri=Uri.parse(AppURL+"terms_"+lng+".php"); // missing 'http://' will cause crashed
+        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+        startActivity(intent);
 
     }
 
@@ -621,25 +702,12 @@ public class HomePage extends AppCompatActivity implements GoogleApiClient.Conne
     }
 
     public void callNumPhone(View view) {
-        Intent callIntent = new Intent(Intent.ACTION_CALL); //use ACTION_CALL class
-        callIntent.setData(Uri.parse("tel:"+getResources().getString(R.string.phone_number)));    //this is the phone number calling
-        //check permission
-        //If the device is running Android 6.0 (API level 23) and the app's targetSdkVersion is 23 or higher,
-        //the system asks the user to grant approval.
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
-            //request permission from user if the app hasn't got the required permission
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.CALL_PHONE},   //request specific permission from user
-                    10);
-            return;
-        }else {     //have got permission
-            try{
-                startActivity(callIntent);  //call activity and make phone call
-            }
-            catch (android.content.ActivityNotFoundException ex){
-            }
-        }
-        overridePendingTransition(0, 0);
+
+        Intent intent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + getResources().getString(R.string.phone_number)));
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        context.startActivity(intent);
+
+
 
     }
     public void FaceBook(View view) {
@@ -665,6 +733,9 @@ public class HomePage extends AppCompatActivity implements GoogleApiClient.Conne
         Intent intent = new Intent(Intent.ACTION_VIEW, uri);
         startActivity(intent);
     }
+
+
+
     public void setLocalexe(String lang) {
 //        Log.e("setlocal is callled","now ");
 //        SharedPreferences pref = getSharedPreferences("Settings", Activity.MODE_PRIVATE);
@@ -815,7 +886,7 @@ public class HomePage extends AppCompatActivity implements GoogleApiClient.Conne
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-            Log.e("user token is :", token2);
+
             if (longitude != 0.0 && latitude != 0.0) {
                 lng = String.valueOf(longitude);
                 lat = String.valueOf(latitude);
@@ -901,160 +972,246 @@ public class HomePage extends AppCompatActivity implements GoogleApiClient.Conne
             super.onPostExecute(result);
             if(categories_list!=null&&!categories_list.isEmpty()){
                 SharedPreferences pref = getSharedPreferences("Settings", Activity.MODE_PRIVATE);
-                String lng = pref.getString("Mylang", "");
-                Log.e("language", lng);
-//                cati3 = (TextView) findViewById(R.id.catgori3);
-//                cati4 = (TextView) findViewById(R.id.catgori4);
-//                cati5 = (TextView) findViewById(R.id.catgori5);
-//                cati6 = (TextView) findViewById(R.id.catgori6);
-//                cati7 = (TextView) findViewById(R.id.catgori7);
-//                cati8 = (TextView) findViewById(R.id.catgori8);
-
-
-//                Integer categories_listsize=categories_list.size();
-
-//                if(lng.equals("ar")){
-//                    String cat1 = categories_list.get(0).get("categoryName_ar");
-//                    String cat2 = categories_list.get(1).get("categoryName_ar");
-//                    String cat3 = categories_list.get(2).get("categoryName_ar");
-//                    String cat4 = categories_list.get(3).get("categoryName_ar");
-//                    String cat5 = categories_list.get(4).get("categoryName_ar");
-//                    String cat6 = categories_list.get(5).get("categoryName_ar");
-//
-//                    // String cat5 = categories_list.get(4).get("categoryName_ar");
-//
-//                    cati3.setText(cat1);
-//                    cati4.setText(cat2);
-//                    cati5.setText(cat3);
-//                    cati6.setText(cat4);
-//                    cati7.setText(cat5);
-//                    cati8.setText(cat6);
-//
-//
-//                }
-//                else {
-
-
+                String langugae = pref.getString("Mylang", "");
+                Log.e("language", langugae);
                     recyclerView_menu = (RecyclerView) findViewById(R.id.RecyclerViewCategory);
                     menuAdapter = new ListMenuAdapter(MenuModelList);
                     RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext(),LinearLayoutManager.HORIZONTAL,false);
                     recyclerView_menu.setLayoutManager(mLayoutManager);
                     recyclerView_menu.setItemAnimator(new DefaultItemAnimator());
                     recyclerView_menu.setAdapter((RecyclerView.Adapter) menuAdapter);
+
+                MenuModel MenuModel;
+
+                if(langugae.equals("ar"))
+                {
+                    MenuModel = new MenuModel("", " بالقرب","",lng ,lat);
+                    MenuModelList.add(MenuModel);
+                }
+                else
+                {
+                    MenuModel = new MenuModel("", "Near By","",lng ,lat);
+                    MenuModelList.add(MenuModel);
+                }
+
+
+
                     for (int i=0;i<categories_list.size();i++)
                     {
-                        if(lng.equals("ar")) {
-                            MenuModel MenuModel = new MenuModel(categories_list.get(i).get("fullimg"), categories_list.get(i).get("categoryName_ar"),categories_list.get(i).get("categoryId"));
+                        if(langugae.equals("ar")) {
+                            MenuModel = new MenuModel(categories_list.get(i).get("fullimg"), categories_list.get(i).get("categoryName_ar"),categories_list.get(i).get("categoryId"),lat,lng );
                             MenuModelList.add(MenuModel);
                         }
                         else
                         {
-                            MenuModel MenuModel = new MenuModel(categories_list.get(i).get("fullimg"), categories_list.get(i).get("categoryName_en"),categories_list.get(i).get("categoryId"));
+                             MenuModel = new MenuModel(categories_list.get(i).get("fullimg"), categories_list.get(i).get("categoryName_en"),categories_list.get(i).get("categoryId"),lat,lng);
                             MenuModelList.add(MenuModel);
                         }
 
                     }
                     ((RecyclerView.Adapter) menuAdapter).notifyDataSetChanged();
 
-
-
-
-//                    if(categories_listsize>1) {
-//                        String cat1 = categories_list.get(0).get("categoryName_en");
-//                        cati3.setText(cat1);
-//                    }
-//
-//                    if(categories_listsize>2) {
-//                        String cat2 = categories_list.get(1).get("categoryName_en");
-//                        cati4.setText(cat2);
-//                    }
-//
-//                    if(categories_listsize>3) {
-//                        String cat3 = categories_list.get(2).get("categoryName_en");
-//                        cati5.setText(cat3);
-//                    }
-//
-//                    if(categories_listsize>4) {
-//                        String cat4 = categories_list.get(3).get("categoryName_en");
-//                        cati6.setText(cat4);
-//                    }
-//
-//                    if(categories_listsize>5) {
-//                            String cat5 = categories_list.get(4).get("categoryName_en");
-//                            cati7.setText(cat5);
-//                        }
-//
-//                    if(categories_listsize>6)
-//                         {
-//                           String cat6 = categories_list.get(5).get("categoryName_en");
-//                           cati8.setText(cat6);
-//                          }
-
-
-               // }
-                ///// set text
-
-
-
-
-
-
-                ///// set icon image
-//                if(categories_listsize>0) {
-//                    String img_cat1_string = categories_list.get(0).get("fullimg");
-//                    img_cati3 =(ImageView)findViewById(R.id.img_btn3);
-//                    Picasso.get().load(img_cat1_string).fit().into(img_cati3);
-//                }
-//                if(categories_listsize>1)
-//                {
-//                    String img_cat2_string = categories_list.get(1).get("fullimg");
-//                    img_cati4 =(ImageView)findViewById(R.id.img_btn4);
-//                    Picasso.get().load(img_cat2_string).fit().into(img_cati4);
-//                }
-//
-//                if(categories_listsize>2)
-//                {
-//                    String img_cat3_string = categories_list.get(2).get("fullimg");
-//                    img_cati5 =(ImageView)findViewById(R.id.img_btn5);
-//                    Picasso.get().load(img_cat3_string).fit().into(img_cati5);
-//
-//                }
-//                if(categories_listsize>3)
-//                {
-//                    String img_cat4_string = categories_list.get(3).get("fullimg");
-//                    img_cati6 =(ImageView)findViewById(R.id.img_btn6);
-//                    Picasso.get().load(img_cat4_string).fit().into(img_cati6);
-//                }
-//                if(categories_listsize>4)
-//                {
-//                    String img_cat5_string = categories_list.get(4).get("fullimg");
-//                    img_cati7 =(ImageView)findViewById(R.id.img_btn7);
-//                    Picasso.get().load(img_cat5_string).fit().into(img_cati7);
-//                }
-//                if(categories_listsize>5)
-//                {
-//                    String img_cat6_string = categories_list.get(5).get("fullimg");
-//                    img_cati8 =(ImageView)findViewById(R.id.img_btn8);
-//                    Picasso.get().load(img_cat6_string).fit().into(img_cati8);
-//                }
-
-
-
-
-
-//            Picasso.get()
-//                    .load(img_cat1_string)
-//                    .resize(50, 50)
-//                    .centerCrop()
-//                    .into(img_cati3);
-
-
-
-
-
             }
         }
     }
+
+
+
+
+
+
+    public class popup extends AsyncTask<Void, Void, Void> {
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            SharedPreferences pref = getSharedPreferences("user", Activity.MODE_PRIVATE);
+            String data = pref.getString("data", "");
+            try {
+                JSONObject userdata = new JSONObject(data);
+                token = userdata.getString("token");
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            Log.e("user token is :", token);
+
+
+//            "categoryId":"1", "lat": "", "lng": "","pager":"1"
+//
+
+
+        }
+
+        @Override
+        protected Void doInBackground(Void... arg0) {
+//            final FormActivity formobject=new FormActivity();
+
+            // Making a request to url and getting response
+            String urlget = base_url + "popup";
+            String jsonStr = null;
+
+            // String jsonStr = sh.makeServiceCall(urlget, token, "", "");
+            // String response = null;
+            try {
+                URL url = new URL(urlget);
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("POST");
+                conn.setRequestProperty("Content-Type", "application/json");
+                conn.setRequestProperty("Client-Auth-Token", "Bearer" + " " + token);
+                // String offerid=ClinicData.get("offerId");
+                JSONObject jsonParam = new JSONObject();
+                if (longitude != 0.0 && latitude != 0.0) {
+                    lng = String.valueOf(longitude);
+                    lat = String.valueOf(latitude);
+
+                }
+                jsonParam.put("lng", lng);
+                jsonParam.put("lat",lat);
+                DataOutputStream wr = new DataOutputStream(conn.getOutputStream());
+                Log.e("Before sending", "1" + jsonParam.toString());
+                wr.writeBytes(jsonParam.toString());
+
+                // read the response
+                InputStream in = new BufferedInputStream(conn.getInputStream());
+                jsonStr = convertStreamToString(in);
+            } catch (MalformedURLException e) {
+                Log.e(TAG, "MalformedURLException: " + e.getMessage());
+            } catch (ProtocolException e) {
+                Log.e(TAG, "ProtocolException: " + e.getMessage());
+            } catch (IOException e) {
+                Log.e(TAG, "IOException: " + e.getMessage());
+            } catch (Exception e) {
+                Log.e(TAG, "Exception: " + e.getMessage());
+            }
+            //   return response;
+//            Log.e("gg mynigga", "yeaah");
+//            Log.e("is offers :", "Response from url countries: " + jsonStr);
+            if (jsonStr != null) {
+                try {
+
+                    popup = new JSONObject(jsonStr);
+
+
+
+                    // adding each child node to HashMap key => value
+
+//                    Categories_ob.put("accountId", accountId);
+//                    Categories_ob.put("bankId", bankId);
+//                    Categories_ob.put("accountName", accountName);
+//                    Categories_ob.put("IBAN", IBAN);
+//                    Categories_ob.put("bankName_en", bankName_en);
+//                    Categories_ob.put("bankName_ar", bankName_ar);
+//                    Categories_ob.put("bankImg", bankImg);
+//                    Categories_ob.put("deleted", deleted);
+//                    Categories_ob.put("created_at", created_at);
+//                    Categories_ob.put("last_modify", last_modify);
+//
+
+//
+
+                } catch (final JSONException e) {
+                    Log.e("", "Json parsing error: " + e.getMessage());
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+
+                            //  formobject.buildDialog(R.style.DialogAnimation, "NO Records found","ok");
+
+
+                        }
+                    });
+
+                }
+
+            } else {
+                Log.e("", "Couldn't get json from server.");
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+
+//                        Toast.makeText(getApplicationContext(),
+//                                "Couldn't get data from server. Check your internet connection or try later",
+//                                Toast.LENGTH_LONG).show();
+
+                    }
+                });
+            }
+
+
+            return null;
+        }
+
+
+        @Override
+        protected void onPostExecute(Void result) {
+            super.onPostExecute(result);
+            SharedPreferences pref = getSharedPreferences("Settings", Activity.MODE_PRIVATE);
+            String lng = pref.getString("Mylang", "");
+                    if(popup!=null) {
+                        AlertDialog.Builder mBuilder = new AlertDialog.Builder(HomePage.this);
+                        View mView = getLayoutInflater().inflate(R.layout.pop_up_layout, null);
+
+                        mBuilder.setView(mView);
+                        final AlertDialog dialog = mBuilder.create();
+                        dialog.show();
+                        final Button closeBtn = mView.findViewById(R.id.closeBtn);
+                        closeBtn.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                dialog.dismiss();
+                            }
+                        });
+                        final ImageView popimage = mView.findViewById(R.id.popimage);
+                        final TextView popupTitle = mView.findViewById(R.id.popupTitle);
+                        final TextView popupDetails = mView.findViewById(R.id.popupdetails);
+                        final Button popupButton = mView.findViewById(R.id.popupButton);
+                        try {
+                            Picasso.get().load(popup.getString("Image")).fit().into(popimage);
+                            if (lng.equals("ar")) {
+                                popupTitle.setText(popup.getString("popupTitle_ar"));
+                                popupDetails.setText(popup.getString("popupDescription_ar"));
+                            } else {
+                                popupTitle.setText(popup.getString("popupTitle_en"));
+                                popupDetails.setText(popup.getString("popupDescription_en"));
+                            }
+                            if (popup.getString("popupType").equals("clinicoffer")) {
+                                popupButton.setVisibility(View.VISIBLE);
+                            }
+
+                            popupButton.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    try {
+                                        Intent intent = new Intent(HomePage.this, ClinicPage.class);
+                                        HashMap<String, String> hashMap = new HashMap<String, String>();
+                                        hashMap.put("offerId", popup.getString("offerId"));
+                                        hashMap.put("clinicId", popup.getString("clinicId"));
+                                        intent.putExtra("Clinic", hashMap);
+                                        startActivity(intent);
+
+                                    } catch (JSONException e) {
+                                        e.printStackTrace();
+                                    }
+
+                                }
+                            });
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+
+
+
+        }
+
+
+    }
+
+
+
+
+
+
 
     @SuppressLint("StaticFieldLeak")
     public class offers extends AsyncTask<Void, Void, Void> {
@@ -1211,6 +1368,7 @@ public class HomePage extends AppCompatActivity implements GoogleApiClient.Conne
             return null;
         }
 
+        @RequiresApi(api = Build.VERSION_CODES.M)
         @Override
         protected void onPostExecute(Void result) {
             super.onPostExecute(result);
@@ -1246,7 +1404,55 @@ public class HomePage extends AppCompatActivity implements GoogleApiClient.Conne
             );
 
             list.setAdapter(adapter);
-//            list.setOnScrollListener(new AbsListView.OnScrollListener() {
+
+            setListViewHeightBasedOnChildren(list);
+
+
+//
+//            recyclerView_offer = (RecyclerView) findViewById(R.id.RecyclerViewofferList);
+//            offerAdapter = new OfferAdapter(OfferModelList);
+//            RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext(),LinearLayoutManager.VERTICAL,false);
+//            recyclerView_offer.setLayoutManager(mLayoutManager);
+//            recyclerView_offer.setItemAnimator(new DefaultItemAnimator());
+//            recyclerView_offer.setAdapter((RecyclerView.Adapter) offerAdapter);
+//            for (int i=0;i<part_offers_list.size();i++)
+//            {
+//                if(lng.equals("ar")) {
+//                    OfferModel OfferModel = new OfferModel(part_offers_list.get(i).get("img"),part_offers_list.get(i).get("serviceName_en"),part_offers_list.get(i).get("discount"),part_offers_list.get(i).get("distance"),part_offers_list.get(i).get("clinicName_ar"),part_offers_list.get(i).get("cost"),part_offers_list.get(i).get("postCost"));
+//                    OfferModelList.add(OfferModel);
+//                }
+//                else
+//                {
+//                    OfferModel OfferModel = new OfferModel(part_offers_list.get(i).get("img"),part_offers_list.get(i).get("serviceName_en"),part_offers_list.get(i).get("discount"),part_offers_list.get(i).get("distance"),part_offers_list.get(i).get("clinicName_en"),part_offers_list.get(i).get("cost"),part_offers_list.get(i).get("postCost"));
+//                    OfferModelList.add(OfferModel);
+//                }
+//
+//            }
+//            ((RecyclerView.Adapter) offerAdapter).notifyDataSetChanged();
+
+//            recyclerView_offer.addOnScrollListener(new RecyclerViewPaginationListener((LinearLayoutManager) mLayoutManager) {
+//                @Override
+//                protected void loadMoreItems() {
+//                    isLoading = true;
+//                    currentPage++;
+//                    new offers().execute();
+//                }
+//
+//                @Override
+//                public boolean isLastPage() {
+//                    return isLastPage;
+//                }
+//
+//                @Override
+//                public boolean isLoading() {
+//                    return isLoading;
+//                }
+//            });
+
+
+
+
+            //            list.setOnScrollListener(new AbsListView.OnScrollListener() {
 //                @Override
 //                public void onScrollStateChanged(AbsListView absListView, int i) {
 //
@@ -1268,7 +1474,7 @@ public class HomePage extends AppCompatActivity implements GoogleApiClient.Conne
 //                        thread.start();
 //
 //                    }
-            setListViewHeightBasedOnChildren(list);
+
 //                }
 //            });
 

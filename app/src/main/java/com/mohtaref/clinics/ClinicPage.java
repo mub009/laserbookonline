@@ -69,6 +69,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 
+import static com.mohtaref.clinics.utility.Constant.AppURL;
 import static com.mohtaref.clinics.utility.Constant.WhatsappMobile;
 
 
@@ -107,8 +108,9 @@ public class ClinicPage extends AppCompatActivity implements OnMapReadyCallback 
     ArrayList<HashMap<String, String>> Services_Dental;
     ArrayList<HashMap<String, String>> Services_Skin;
     ArrayList<HashMap<String, String>> Consultation_Skin;
+    ArrayList<HashMap<String, String>> Services_Operations;
 
-    Intent intent_offer;
+    Intent intent_offer,Intent_gift;
     private GoogleMap mMaps;
 
     ArrayList<ArrayList<HashMap<String, String>>> servicesOfclinic;
@@ -166,6 +168,7 @@ public class ClinicPage extends AppCompatActivity implements OnMapReadyCallback 
         Services_Dental = new ArrayList<>();
         Services_Skin = new ArrayList<>();
         Consultation_Skin=new ArrayList<>();
+        Services_Operations=new ArrayList<>();
         // DrawerLayout drawer = findViewById(R.id.drawer_layout);
         ClinicData = (HashMap<String, String>) getIntent().getExtras().getSerializable("Clinic");
 
@@ -208,6 +211,22 @@ public class ClinicPage extends AppCompatActivity implements OnMapReadyCallback 
         }
 
         new ClinicDetails().execute();
+
+        chosen_service.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                SharedPreferences.Editor editor=getSharedPreferences("giftFriend", Activity.MODE_PRIVATE).edit();
+                editor.putString("is_open","1");
+                editor.apply();
+
+
+                Intent intent=new Intent(ClinicPage.this,GiftIntroductionPage.class);
+                intent.putExtra("ratinglist",ClinicRatingList);
+                startActivity(Intent_gift);
+
+            }
+        });
 
 
     }
@@ -280,9 +299,11 @@ public class ClinicPage extends AppCompatActivity implements OnMapReadyCallback 
     }
 
     public void Terms_page(View view) {
-        Intent i = new Intent(this, Terms.class);
-        startActivity(i);
-        overridePendingTransition(0, 0);
+        SharedPreferences pref=getSharedPreferences("Settings",Activity.MODE_PRIVATE);
+        String lng=pref.getString("Mylang","");
+        Uri uri=Uri.parse(AppURL+"terms_"+lng+".php"); // missing 'http://' will cause crashed
+        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+        startActivity(intent);
 
     }
 
@@ -304,25 +325,9 @@ public class ClinicPage extends AppCompatActivity implements OnMapReadyCallback 
     }
 
     public void callNumPhone(View view) {
-        Intent callIntent = new Intent(Intent.ACTION_CALL); //use ACTION_CALL class
-        callIntent.setData(Uri.parse("tel:"+getResources().getString(R.string.phone_number)));    //this is the phone number calling
-        //check permission
-        //If the device is running Android 6.0 (API level 23) and the app's targetSdkVersion is 23 or higher,
-        //the system asks the user to grant approval.
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
-            //request permission from user if the app hasn't got the required permission
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.CALL_PHONE},   //request specific permission from user
-                    10);
-            return;
-        }else {     //have got permission
-            try{
-                startActivity(callIntent);  //call activity and make phone call
-            }
-            catch (android.content.ActivityNotFoundException ex){
-            }
-        }
-        overridePendingTransition(0, 0);
+        Intent intent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + getResources().getString(R.string.phone_number)));
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
 
     }
     public void FaceBook(View view) {
@@ -943,7 +948,7 @@ public class ClinicPage extends AppCompatActivity implements OnMapReadyCallback 
             );
 
             offers_list_view.setAdapter(adapter);
-            int L=0,F=0,B=0,D=0,S=0,C=0;
+            int L=0,F=0,B=0,D=0,S=0,C=0,O=0;
             offers_list_view.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
@@ -956,6 +961,14 @@ public class ClinicPage extends AppCompatActivity implements OnMapReadyCallback 
                     Log.e("offer is :","this"+offers.toString());
                     intent_offer.putExtra("offer", offers);
                     intent_offer.putExtra("clinic",ClinicData);
+
+                    Intent_gift = new Intent(ClinicPage.this, GiftPaymentPage.class);
+                    Log.e("offer is :","this"+offers.toString());
+                    Intent_gift.putExtra("offer", offers);
+                    Intent_gift.putExtra("clinic",ClinicData);
+
+
+
                     //   RelativeLayout footer=(RelativeLayout)findViewById(R.id.footer);
                    // footer.setVisibility(View.VISIBLE);
                     bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
@@ -967,11 +980,11 @@ public class ClinicPage extends AppCompatActivity implements OnMapReadyCallback 
 
                     BookNow.setText("book now");
 
-                    if(lng.equals("ar"))
-                        chosen_service.setText(offers.get("postCost")+"ريال ");
-
-                    else
-                    chosen_service.setText(offers.get("postCost")+" Riyal");
+//                    if(lng.equals("ar"))
+//                        chosen_service.setText(offers.get("postCost")+"ريال ");
+//
+//                    else
+//                    chosen_service.setText(offers.get("postCost")+" Sar");
                     footer.setVisibility(View.GONE);
                     footer.setVisibility(View.VISIBLE);
 
@@ -998,7 +1011,7 @@ public class ClinicPage extends AppCompatActivity implements OnMapReadyCallback 
             rating_list_view.setAdapter(adapter_rating);
             setListViewHeightBasedOnChildren(rating_list_view);
 
-            boolean Add_LASER=false,Add_Filler=false,Add_Botox=false,Add_Dental=false,Add_Skin=false,Add_Consultation=false;
+            boolean Add_LASER=false,Add_Filler=false,Add_Botox=false,Add_Dental=false,Add_Skin=false,Add_Consultation=false,Add_Operations=false;
             if(lng.equals("ar")){
                 for (int j=0;j<services_list.size();j++){
                     String category=services_list.get(j).get("categoryName_ar");
@@ -1033,6 +1046,11 @@ public class ClinicPage extends AppCompatActivity implements OnMapReadyCallback 
                         Add_Consultation=true;
                         C++;
                     }
+                    if( category.equals("عمليات")){
+                        Services_Operations.add(services_list.get(j));
+                        Add_Operations=true;
+                        O++;
+                    }
 
 
                 }
@@ -1048,6 +1066,8 @@ public class ClinicPage extends AppCompatActivity implements OnMapReadyCallback 
                     exphead.add("بشرة");
                 if(C>0)
                     exphead.add("دكتور");
+                if(O>0)
+                    exphead.add("عمليات");
             }
             else
             {
@@ -1085,7 +1105,11 @@ public class ClinicPage extends AppCompatActivity implements OnMapReadyCallback 
                         Add_Consultation=true;
                         C++;
                     }
-
+                    if( category.equals("Operations")){
+                        Services_Operations.add(services_list.get(j));
+                        Add_Operations=true;
+                        O++;
+                    }
                     //Consultation
 
                 }
@@ -1101,6 +1125,8 @@ public class ClinicPage extends AppCompatActivity implements OnMapReadyCallback 
                     exphead.add("Skin");
                 if(C>0)
                     exphead.add("Doctors");
+                if(O>0)
+                    exphead.add("Operations");
 
             }
 
@@ -1129,7 +1155,10 @@ public class ClinicPage extends AppCompatActivity implements OnMapReadyCallback 
             {
                 servicesOfclinic.add(Consultation_Skin);
             }
-
+            if(Add_Operations==true)
+            {
+                servicesOfclinic.add(Services_Operations);
+            }
 
 
 
@@ -1153,13 +1182,20 @@ public class ClinicPage extends AppCompatActivity implements OnMapReadyCallback 
                     intent_offer.putExtra("clinic",ClinicData);
                     //   RelativeLayout footer=(RelativeLayout)findViewById(R.id.footer);
                     // footer.setVisibility(View.VISIBLE);
+
+                    Intent_gift = new Intent(ClinicPage.this, GiftPaymentPage.class);
+                    Log.e("offer is :","this"+servicesOfclinic.get(groupPosition).get(childPosition));
+                    Intent_gift.putExtra("offer", servicesOfclinic.get(groupPosition).get(childPosition));
+                    Intent_gift.putExtra("clinic",ClinicData);
+
+
                     bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
                     bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
-                    if(lng.equals("ar"))
-                        chosen_service.setText(servicesOfclinic.get(groupPosition).get(childPosition).get("postCost")+"ريال ");
-
-                    else
-                        chosen_service.setText(servicesOfclinic.get(groupPosition).get(childPosition).get("postCost")+" Riyal");
+//                    if(lng.equals("ar"))
+//                        chosen_service.setText(servicesOfclinic.get(groupPosition).get(childPosition).get("postCost")+"ريال ");
+//
+//                    else
+//                        chosen_service.setText(servicesOfclinic.get(groupPosition).get(childPosition).get("postCost")+" Sar");
                     footer.setVisibility(View.GONE);
                     footer.setVisibility(View.VISIBLE);
 //                    Intent intents= new Intent(ClinicPage.this,DatePickerPage.class);

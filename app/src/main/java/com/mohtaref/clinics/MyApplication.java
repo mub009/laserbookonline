@@ -9,9 +9,22 @@ import android.content.res.Resources;
 import android.net.ConnectivityManager;
 import android.util.DisplayMetrics;
 
+import androidx.annotation.Nullable;
+
+import com.google.android.play.core.appupdate.AppUpdateInfo;
+import com.google.android.play.core.appupdate.AppUpdateManager;
+import com.google.android.play.core.appupdate.AppUpdateManagerFactory;
+import com.google.android.play.core.install.model.AppUpdateType;
+import com.google.android.play.core.install.model.UpdateAvailability;
+import com.google.android.play.core.tasks.Task;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.Locale;
 
 import io.branch.referral.Branch;
+import io.branch.referral.BranchError;
 
 public class MyApplication extends Application {
     private static MyApplication mInstance;
@@ -54,6 +67,16 @@ public class MyApplication extends Application {
 
         // Branch object initialization
         Branch.getAutoInstance(this);
+
+        JSONObject params = Branch.getInstance().getFirstReferringParams();
+
+        try {
+            if ((params.has("+clicked_branch_link")) && (params.getBoolean("+clicked_branch_link")))
+            Branch.getInstance(getApplicationContext()).userCompletedAction("installAfterReferral");
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
 
     }
 

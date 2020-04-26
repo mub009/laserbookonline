@@ -97,7 +97,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_marginStart="10dp"
-            android:text="1963.001 Riyal"
+            android:text="Gift a friend"
             android:textColor="@color/white"
             android:textSize="17sp" />
     </LinearLayout>

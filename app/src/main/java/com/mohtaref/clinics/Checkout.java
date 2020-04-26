@@ -71,6 +71,10 @@ import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import static com.mohtaref.clinics.utility.Constant.AppURL;
+import static com.mohtaref.clinics.utility.Constant.POPupSharedPreferencesKey;
+import static com.mohtaref.clinics.utility.Constant.PaymentTypeDetails;
+
 public class Checkout extends AppCompatActivity{
     ArrayList<HashMap<String, String>> bank_accounts_list;
     ArrayList<String> bank_accounts_ar;
@@ -112,12 +116,13 @@ public class Checkout extends AppCompatActivity{
 
     Button PromoCodeChecking;
     Button btn_PromoCoderemove;
-    String Promocode;
+    String PromoCodeValue,SucessPromoCode;
 
     TextView partiallypaidAmount;
     TextView balanceAmount;
     TextView txtbalanceAmount;
     TextView txtpartiallypaidAmount;
+    TextView promoAmount;
 
     JSONObject PromoMsgObject;
 
@@ -129,6 +134,7 @@ public class Checkout extends AppCompatActivity{
     LinearLayout transfer_form;
     LinearLayout credit_form;
     LinearLayout mada_form;
+    LinearLayout LLpromocode;
     CheckBox checkBox2;
 
     EditText depostDate;
@@ -162,7 +168,7 @@ public class Checkout extends AppCompatActivity{
         setContentView(R.layout.activity_checkout);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
+        PaymentTypeDetails();
 
         loadlocal();
         promotxt=(EditText) findViewById(R.id.txt_PromoCodeTxtbox);
@@ -174,9 +180,10 @@ public class Checkout extends AppCompatActivity{
 
         PromoCodeChecking=(Button) findViewById(R.id.btn_PromoCodeChecking);
 
+        LLpromocode = (LinearLayout) findViewById(R.id.LLpromocode);
 
         btn_PromoCoderemove=(Button) findViewById(R.id.btn_PromoCoderemove);
-
+        promoAmount= (TextView) findViewById(R.id.promoAmount);
         bank_accounts_list = new ArrayList<>();
         bank_accounts_ar = new ArrayList<>();
         bank_accounts_en = new ArrayList<>();
@@ -249,6 +256,8 @@ public class Checkout extends AppCompatActivity{
 
                 } catch(Exception ignored) {
                 }
+                PromoCodeValue= String.valueOf(promotxt.getText());
+                SucessPromoCode="";
 
                 new PromoCode().execute();
 
@@ -262,6 +271,9 @@ public class Checkout extends AppCompatActivity{
                 Promomsg.setVisibility(View.GONE);
                 PromoDiscount="0";
                 promotxt.setText("");
+                PromoCodeValue="";
+                SucessPromoCode="";
+                LLpromocode.setVisibility(View.GONE);
             }
         });
 
@@ -276,13 +288,7 @@ public class Checkout extends AppCompatActivity{
 //                    alert_message_guest(getResources().getString(R.string.guestErrTitle), getResources().getString(R.string.guestErrDesc));
 //
                     if (credit.isChecked() || mada.isChecked()) {
-                        credit_firstName = (EditText) findViewById(R.id.first_credit);
-                        credit_lastName = (EditText) findViewById(R.id.last_credit);
-                        credit_email = (EditText) findViewById(R.id.email_credit);
 
-                        mada_firstName = (EditText) findViewById(R.id.first_mada);
-                        mada_lastName = (EditText) findViewById(R.id.last_mada);
-                        mada_email = (EditText) findViewById(R.id.email_mada);
                         if (credit.isChecked()) {
                             firstName = credit_firstName.getText().toString();
                             lastName = credit_lastName.getText().toString();
@@ -297,10 +303,12 @@ public class Checkout extends AppCompatActivity{
                             selected_payment_type = "mada";
 
                         }
-                        if (!TextUtils.isEmpty(firstName) && !TextUtils.isEmpty(lastName) && !TextUtils.isEmpty(email) && isEmailValid(email)) {
+                        if (!TextUtils.isEmpty(firstName) && !TextUtils.isEmpty(lastName) && !TextUtils.isEmpty(email)) {
                             new ReservationCredit().execute();
                         } else {
-                            Log.e("invalid ", "email");
+                            alert_message_guest("Payment Details", "Payment Details Required");
+
+
                         }             //   new Reservation().execute();
                     } else if (transfer.isChecked()) {
 
@@ -656,9 +664,11 @@ public class Checkout extends AppCompatActivity{
     }
 
     public void Terms_page(View view) {
-        Intent i = new Intent(this, Terms.class);
-        startActivity(i);
-        overridePendingTransition(0, 0);
+        SharedPreferences pref=getSharedPreferences("Settings",Activity.MODE_PRIVATE);
+        String lng=pref.getString("Mylang","");
+        Uri uri=Uri.parse(AppURL+"terms_"+lng+".php"); // missing 'http://' will cause crashed
+        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+        startActivity(intent);
 
     }
 
@@ -681,21 +691,9 @@ public class Checkout extends AppCompatActivity{
 
     public void callNumPhone(View view) {
 
-        Intent callIntent = new Intent(Intent.ACTION_CALL);
-        callIntent.setData(Uri.parse("tel:" + getResources().getString(R.string.phone_number)));
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
-        startActivity(callIntent);
-        overridePendingTransition(0, 0);
-
+        Intent intent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + getResources().getString(R.string.phone_number)));
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
     }
     public void FaceBook(View view) {
         Uri uri = Uri.parse("https://www.facebook.com/bookinglaser/"); // missing 'http://' will cause crashed
@@ -720,6 +718,33 @@ public class Checkout extends AppCompatActivity{
         Intent intent = new Intent(Intent.ACTION_VIEW, uri);
         startActivity(intent);
     }
+
+    public void setPaymentTypeDetails(String firstName,String lastName,String email)
+    {
+        SharedPreferences.Editor editor = getSharedPreferences(PaymentTypeDetails, MODE_PRIVATE).edit();
+        editor.putString("firstName", firstName);
+        editor.putString("lastName", lastName);
+        editor.putString("email", email);
+        editor.apply();
+    }
+    public void PaymentTypeDetails()
+    {
+        SharedPreferences pref=getSharedPreferences(PaymentTypeDetails,Activity.MODE_PRIVATE);
+        credit_firstName = (EditText) findViewById(R.id.first_credit);
+        credit_lastName = (EditText) findViewById(R.id.last_credit);
+        credit_email = (EditText) findViewById(R.id.email_credit);
+        mada_firstName = (EditText) findViewById(R.id.first_mada);
+        mada_lastName = (EditText) findViewById(R.id.last_mada);
+        mada_email = (EditText) findViewById(R.id.email_mada);
+        credit_firstName.setText(pref.getString("firstName",""));
+        credit_lastName.setText(pref.getString("lastName",""));
+        credit_email.setText(pref.getString("email",""));
+        mada_firstName.setText(pref.getString("firstName",""));
+        mada_lastName.setText(pref.getString("lastName",""));
+        mada_email.setText(pref.getString("email",""));
+
+    }
+
     public void setLocale(String lang) {
         // get language return 2 first letters lower case of the language //// in the other hand get display language return the name of the language
         String CurrentLang = Locale.getDefault().getDisplayLanguage();
@@ -848,9 +873,7 @@ public class Checkout extends AppCompatActivity{
                 jsonParam.put("totalDuration",offer.get("duration"));
 
                 if(offer.get("offerId")!=null&&!offer.get("offerId").equals("null")) {
-
                     jsonParam.put("serviceStatus","offer");
-
                 }
                 else
                 {
@@ -1010,6 +1033,7 @@ public class Checkout extends AppCompatActivity{
                 balanceAmount = (TextView) findViewById(R.id.balanceAmount);
                 txtbalanceAmount = (TextView) findViewById(R.id.textView84);
                 txtpartiallypaidAmount = (TextView) findViewById(R.id.textView83);
+
 
                 if (clinic_details.get("is_partiallyPaidEnable").equals("1")) {
                     CreditPaymentApi = "partiallycreateUrlAndOrderV2";
@@ -1694,7 +1718,6 @@ public class Checkout extends AppCompatActivity{
                 else {
                     jsonParam.put("discount", PromoDiscount);
                     jsonParam.put("offerId", null);
-
                 }
                 String nocomma=offer.get("postCost");
                 nocomma=  nocomma.replace(",", "");
@@ -1907,10 +1930,11 @@ public class Checkout extends AppCompatActivity{
                    jsonParam.put("discount", offer.get("discount"));
                 }
                 else {
-                    jsonParam.put("discount",PromoDiscount);
+                    jsonParam.put("discount","");
                     jsonParam.put("offerId", "");
 
                 }
+                jsonParam.put("coupon", SucessPromoCode);
                 String nocomma=serviceDetails.get("postCost");
                 nocomma=  nocomma.replace(",", "");
                 jsonParam.put("totalCost",nocomma );
@@ -1918,7 +1942,7 @@ public class Checkout extends AppCompatActivity{
                 jsonParam.put("cc_firstName",firstName);
                 jsonParam.put("cc_lastName",lastName);
                 jsonParam.put("email",email);
-
+                setPaymentTypeDetails(firstName,lastName,email);
                 DataOutputStream wr = new DataOutputStream(conn.getOutputStream());
                 Log.e("Before sending", "1" + jsonParam.toString());
                 wr.writeBytes(jsonParam.toString());
@@ -2240,9 +2264,9 @@ public class Checkout extends AppCompatActivity{
                 else {
                     jsonParam.put("status","service");
                 }
-                jsonParam.put("UserSelectServiceId", offer.get("serviceId"));
-                jsonParam.put("amount",serviceDetails.get("postCost"));
-                jsonParam.put("coupon",Promocode);
+                jsonParam.put("serviceId", offer.get("serviceId"));
+//                jsonParam.put("amount",serviceDetails.get("postCost"));
+                jsonParam.put("coupon",PromoCodeValue);
 
 
                 DataOutputStream wr = new DataOutputStream(conn.getOutputStream());
@@ -2352,6 +2376,9 @@ public class Checkout extends AppCompatActivity{
                     txtPromocodeHeadMsg.setText(PromocodeDetails.get("message_ar"));
                     txtPromocodeBodyMsg.setText(PromocodeDetails.get("body_ar"));
                     PromoDiscount="0";
+                    SucessPromoCode="";
+                    LLpromocode.setVisibility(View.GONE);
+
 
 
                 }
@@ -2361,8 +2388,11 @@ public class Checkout extends AppCompatActivity{
 //                PromoDiscount=c.getString("discountAmount");
                     PromoDiscount=PromocodeDetails.get("discountAmount");
                     Promomsg.setVisibility(View.VISIBLE);
+                    LLpromocode.setVisibility(View.VISIBLE);
                     txtPromocodeHeadMsg.setText(PromocodeDetails.get("message_ar"));
                     txtPromocodeBodyMsg.setText(PromocodeDetails.get("body_ar"));
+                    SucessPromoCode=PromoCodeValue;
+                    promoAmount.setText(PromocodeDetails.get("discountAmount"));
 
                 }
 
@@ -2381,7 +2411,8 @@ public class Checkout extends AppCompatActivity{
                     Promomsg.setVisibility(View.VISIBLE);
                     txtPromocodeHeadMsg.setText(PromocodeDetails.get("message_en"));
                     txtPromocodeBodyMsg.setText(PromocodeDetails.get("body_en"));
-
+                    SucessPromoCode="";
+                    LLpromocode.setVisibility(View.GONE);
 
                 }
                 else if(PromocodeDetails.get("status").equals("success"))
@@ -2392,6 +2423,9 @@ public class Checkout extends AppCompatActivity{
                     Promomsg.setVisibility(View.VISIBLE);
                     txtPromocodeHeadMsg.setText(PromocodeDetails.get("message_en"));
                     txtPromocodeBodyMsg.setText(PromocodeDetails.get("body_en"));
+                    SucessPromoCode=PromoCodeValue;
+                    promoAmount.setText(PromocodeDetails.get("discountAmount"));
+                    LLpromocode.setVisibility(View.VISIBLE);
                 }
 
 

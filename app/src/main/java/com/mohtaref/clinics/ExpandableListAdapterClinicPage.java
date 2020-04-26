@@ -72,7 +72,7 @@ public class ExpandableListAdapterClinicPage extends BaseExpandableListAdapter {
             txtListChildService.setText(childText.get("serviceName_en"));
             TextView txtListChildPrice = (TextView) convertView
                     .findViewById(R.id.price2);
-            txtListChildPrice.setText(childText.get("postCost")+" Riayl");
+            txtListChildPrice.setText(childText.get("postCost")+" Sar");
             View line = convertView.findViewById(R.id.viewLine);
 
             if(isLastChild){

@@ -54,6 +54,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;
 
+import static com.mohtaref.clinics.utility.Constant.AppURL;
 import static com.mohtaref.clinics.utility.Constant.WhatsappMobile;
 
 public class NearByActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener,ConnectivityReceiver.ConnectivityReceiverListener {
@@ -278,9 +279,11 @@ public class NearByActivity extends AppCompatActivity implements NavigationView.
     }
 
     public void Terms_page(View view) {
-        Intent i = new Intent(this, Terms.class);
-        startActivity(i);
-        overridePendingTransition(0, 0);
+        SharedPreferences pref=getSharedPreferences("Settings",Activity.MODE_PRIVATE);
+        String lng=pref.getString("Mylang","");
+        Uri uri=Uri.parse(AppURL+"terms_"+lng+".php"); // missing 'http://' will cause crashed
+        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+        startActivity(intent);
 
     }
 
@@ -302,25 +305,9 @@ public class NearByActivity extends AppCompatActivity implements NavigationView.
     }
 
     public void callNumPhone(View view) {
-        Intent callIntent = new Intent(Intent.ACTION_CALL); //use ACTION_CALL class
-        callIntent.setData(Uri.parse("tel:"+getResources().getString(R.string.phone_number)));    //this is the phone number calling
-        //check permission
-        //If the device is running Android 6.0 (API level 23) and the app's targetSdkVersion is 23 or higher,
-        //the system asks the user to grant approval.
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
-            //request permission from user if the app hasn't got the required permission
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.CALL_PHONE},   //request specific permission from user
-                    10);
-            return;
-        }else {     //have got permission
-            try{
-                startActivity(callIntent);  //call activity and make phone call
-            }
-            catch (android.content.ActivityNotFoundException ex){
-            }
-        }
-        overridePendingTransition(0, 0);
+        Intent intent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + getResources().getString(R.string.phone_number)));
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
 
     }
     public void FaceBook(View view) {

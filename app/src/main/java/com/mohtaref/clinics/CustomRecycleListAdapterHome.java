@@ -103,9 +103,9 @@ public void addListItemToAdapter(ArrayList<HashMap<String, String>> Noffers){
             Double costd=Double.parseDouble(hashmap_Current.get("cost"));
             int value = costd.intValue();
             String cost=String.valueOf(value);
-            previos_price.setText(cost+" Riyal");
+            previos_price.setText(cost+" Sar");
             TextView price = (TextView) convertView.findViewById(R.id.price);
-            price.setText(hashmap_Current.get("postCost")+" Riyal");
+            price.setText(hashmap_Current.get("postCost")+" Sar");
             strikeThroughText(previos_price);
         }
 

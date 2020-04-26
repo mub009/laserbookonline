@@ -9,16 +9,22 @@ import android.content.SharedPreferences;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.NestedScrollView;
+import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Adapter;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
@@ -27,6 +33,8 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+
+import androidx.annotation.RequiresApi;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -40,6 +48,7 @@ import com.mohtaref.clinics.HomePage;
 import com.mohtaref.clinics.HttpHandlerGet;
 import com.mohtaref.clinics.HttpHandlerPostToken;
 import com.mohtaref.clinics.R;
+import com.mohtaref.clinics.adapter.ListMenuAdapter;
 import com.mohtaref.clinics.model.MenuModel;
 import com.smarteist.autoimageslider.DefaultSliderView;
 import com.smarteist.autoimageslider.IndicatorAnimations;
@@ -54,6 +63,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static com.mohtaref.clinics.ClinicPage.setListViewHeightBasedOnChildren;
@@ -134,32 +144,27 @@ public class HomePageFragment extends Fragment implements GoogleApiClient.Connec
     public boolean removed = false;
     public boolean refresh = true;
     View view;
+    private RecyclerView recyclerView_menu,recyclerView_offer;
+    private Adapter menuAdapter,offerAdapter;
+    private List<MenuModel> MenuModelList = new ArrayList<>();
 
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-
-
         view = inflater.inflate(
-                R.layout.activity_home_page, container, false);
-
-
-        //        initialzing Openning
-
-
+                R.layout.content_home_page, container, false);
+        listprog = (ProgressBar) view.findViewById(R.id.listprogress);
         sliderLayout = view.findViewById(R.id.imageSlider);
         sliderLayout.setIndicatorAnimation(IndicatorAnimations.SLIDE); //set indicator animation by using SliderLayout.IndicatorAnimations. :WORM or THIN_WORM or COLOR or DROP or FILL or NONE or SCALE or SCALE_DOWN or SLIDE and SWAP!!
         sliderLayout.setSliderTransformAnimation(SliderAnimations.VERTICALFLIPTRANSFORMATION);
         sliderLayout.setScrollTimeInSec(3); //set scroll delay in seconds :
-
         //        initialzing Clossing
-
-
+        mHandler = new HomePageFragment.MyHandler();
+        homeMainLayout = (NestedScrollView)  view.findViewById(R.id.viewscroll);
+        homeMainLayout.setNestedScrollingEnabled(false);
         locationManager = (LocationManager) getContext().getSystemService(Context.LOCATION_SERVICE);
         gps_enabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
-
-
         if (gps_enabled) {
             mLocationRequest = LocationRequest.create()
                     .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
@@ -201,21 +206,16 @@ public class HomePageFragment extends Fragment implements GoogleApiClient.Connec
 
 
     public void tasks() {
-
         new HomePageFragment.GetCategories().execute();
-
         new HomePageFragment.offers().execute();
-
-
     }
 
-    @SuppressLint("StaticFieldLeak")
     public class GetCategories extends AsyncTask<Void, Void, String> {
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
 
-            SharedPreferences pref = getContext().getSharedPreferences("user", Activity.MODE_PRIVATE);
+            SharedPreferences pref = getActivity().getSharedPreferences("user", Activity.MODE_PRIVATE);
             String data = pref.getString("data", "");
             try {
                 JSONObject userdata = new JSONObject(data);
@@ -223,7 +223,7 @@ public class HomePageFragment extends Fragment implements GoogleApiClient.Connec
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-            Log.e("user token is :", token2);
+
             if (longitude != 0.0 && latitude != 0.0) {
                 lng = String.valueOf(longitude);
                 lat = String.valueOf(latitude);
@@ -233,10 +233,10 @@ public class HomePageFragment extends Fragment implements GoogleApiClient.Connec
 
         @Override
         protected String doInBackground(Void... arg0) {
-
+//            final FormActivity formobject=new FormActivity();
             HttpHandlerGet sh = new HttpHandlerGet();
             // Making a request to url and getting response
-            String urlget = base_url + "categories";
+            String urlget = base_url + "categoriesv1";
             String jsonStr = sh.makeServiceCall(urlget, token2);
             //Log.e("what is this chips", "idon't know?" + jsonStr);
             // Log.e("what to ", "doooooo");
@@ -244,32 +244,44 @@ public class HomePageFragment extends Fragment implements GoogleApiClient.Connec
             if (jsonStr != null) {
                 try {
                     JSONArray jsonarray = new JSONArray(jsonStr);
+                    //   Log.e("Jsonarray size", "that is : " + jsonarray.length());
                     for (int i = 0; i < jsonarray.length(); i++) {
-
                         JSONObject c = jsonarray.getJSONObject(i);
-                        HashMap<String, String> Categories_ob = new HashMap<>();
-                        // adding each child node to HashMap key => value
-                        Categories_ob.put("categoryId", c.getString("categoryId"));
-                        Categories_ob.put("categoryName_en", c.getString("categoryName_en"));
-                        Categories_ob.put("categoryName_ar", c.getString("categoryName_ar"));
-                        Categories_ob.put("fullimg", c.getString("fullimg"));
-                        categories_list.add(Categories_ob);
+                        String categoryId = c.getString("categoryId");
+                        String categoryName_en = c.getString("categoryName_en");
+                        String categoryName_ar = c.getString("categoryName_ar");
+                        String deleted = c.getString("deleted");
+                        String created_at = c.getString("created_at");
+                        String last_modify = c.getString("last_modify");
+                        String fullimg=c.getString("fullimg");
 
+                        // tmp hash map for single offer
+                        HashMap<String, String> Categories_ob = new HashMap<>();
+
+                        // adding each child node to HashMap key => value
+
+                        Categories_ob.put("categoryId", categoryId);
+                        Categories_ob.put("categoryName_en", categoryName_en);
+                        Categories_ob.put("categoryName_ar", categoryName_ar);
+                        Categories_ob.put("deleted", deleted);
+                        Categories_ob.put("created_at", created_at);
+                        Categories_ob.put("last_modify", last_modify);
+                        Categories_ob.put("fullimg", fullimg);
+
+                        categories_list.add(Categories_ob);
                     }
                 } catch (final JSONException e) {
                     Log.e("", "Json parsing error: " + e.getMessage());
-                    Activity activity = getActivity();
-                    if (activity != null) {
-                        getActivity().runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
+                    getActivity().runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
 
-                                //  formobject.buildDialog(R.style.DialogAnimation, "NO Records found","ok");
+                            //  formobject.buildDialog(R.style.DialogAnimation, "NO Records found","ok");
 
 
-                            }
-                        });
-                    }
+                        }
+                    });
+
                 }
 
             } else {
@@ -294,73 +306,45 @@ public class HomePageFragment extends Fragment implements GoogleApiClient.Connec
         protected void onPostExecute(String result) {
             super.onPostExecute(result);
             if(categories_list!=null&&!categories_list.isEmpty()){
-                SharedPreferences pref = getContext().getSharedPreferences("Settings", Activity.MODE_PRIVATE);
-                String lng = pref.getString("Mylang", "");
-                Log.e("language", lng);
-                cati3 = (TextView) view.findViewById(R.id.catgori3);
-                cati4 = (TextView) view.findViewById(R.id.catgori4);
-                cati5 = (TextView) view.findViewById(R.id.catgori5);
-                cati6 = (TextView) view.findViewById(R.id.catgori6);
-                cati7 = (TextView) view.findViewById(R.id.catgori7);
+                SharedPreferences pref = getActivity().getSharedPreferences("Settings", Activity.MODE_PRIVATE);
+                String langugae = pref.getString("Mylang", "");
+                Log.e("language", langugae);
+                recyclerView_menu = (RecyclerView) view.findViewById(R.id.RecyclerViewCategory);
+                menuAdapter = new ListMenuAdapter(MenuModelList);
+                RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getActivity(),LinearLayoutManager.HORIZONTAL,false);
+                recyclerView_menu.setLayoutManager(mLayoutManager);
+                recyclerView_menu.setItemAnimator(new DefaultItemAnimator());
+                recyclerView_menu.setAdapter((RecyclerView.Adapter) menuAdapter);
 
-                if(lng.equals("ar")){
-                    String cat1 = categories_list.get(0).get("categoryName_ar");
-                    String cat2 = categories_list.get(1).get("categoryName_ar");
-                    String cat3 = categories_list.get(2).get("categoryName_ar");
-                    String cat4 = categories_list.get(3).get("categoryName_ar");
-                    String cat5 = categories_list.get(4).get("categoryName_ar");
+                MenuModel MenuModel;
 
-                    // String cat5 = categories_list.get(4).get("categoryName_ar");
+                if(langugae.equals("ar"))
+                {
+                    MenuModel = new MenuModel("", " بالقرب","",lng ,lat);
+                    MenuModelList.add(MenuModel);
+                }
+                else
+                {
+                    MenuModel = new MenuModel("", "Near By","",lng ,lat);
+                    MenuModelList.add(MenuModel);
+                }
 
-                    cati3.setText(cat1);
-                    cati4.setText(cat2);
-                    cati5.setText(cat3);
-                    cati6.setText(cat4);
-                    cati7.setText(cat5);
 
+
+                for (int i=0;i<categories_list.size();i++)
+                {
+                    if(langugae.equals("ar")) {
+                        MenuModel = new MenuModel(categories_list.get(i).get("fullimg"), categories_list.get(i).get("categoryName_ar"),categories_list.get(i).get("categoryId"),lat,lng );
+                        MenuModelList.add(MenuModel);
+                    }
+                    else
+                    {
+                        MenuModel = new MenuModel(categories_list.get(i).get("fullimg"), categories_list.get(i).get("categoryName_en"),categories_list.get(i).get("categoryId"),lat,lng);
+                        MenuModelList.add(MenuModel);
+                    }
 
                 }
-                else {
-                    String cat1 = categories_list.get(0).get("categoryName_en");
-                    String cat2 = categories_list.get(1).get("categoryName_en");
-                    String cat3 = categories_list.get(2).get("categoryName_en");
-                    String cat4 = categories_list.get(3).get("categoryName_en");
-                    String cat5 = categories_list.get(4).get("categoryName_en");
-
-                    cati3.setText(cat1);
-                    cati4.setText(cat2);
-                    cati5.setText(cat3);
-                    cati6.setText(cat4);
-                    cati7.setText(cat5);
-
-                }
-                ///// set text
-
-
-
-
-
-
-                ///// set icon image
-                String img_cat1_string = categories_list.get(0).get("fullimg");
-                String img_cat2_string = categories_list.get(1).get("fullimg");
-                String img_cat3_string = categories_list.get(2).get("fullimg");
-                String img_cat4_string = categories_list.get(3).get("fullimg");
-                String img_cat5_string = categories_list.get(4).get("fullimg");
-
-
-                img_cati3 =(ImageView)view.findViewById(R.id.img_btn3);
-                img_cati4 =(ImageView)view.findViewById(R.id.img_btn4);
-                img_cati5 =(ImageView)view.findViewById(R.id.img_btn5);
-                img_cati6 =(ImageView)view.findViewById(R.id.img_btn6);
-                img_cati7 =(ImageView)view.findViewById(R.id.img_btn7);
-
-
-                Picasso.get().load(img_cat1_string).fit().into(img_cati3);
-                Picasso.get().load(img_cat2_string).fit().into(img_cati4);
-                Picasso.get().load(img_cat3_string).fit().into(img_cati5);
-                Picasso.get().load(img_cat4_string).fit().into(img_cati6);
-                Picasso.get().load(img_cat5_string).fit().into(img_cati7);
+                ((RecyclerView.Adapter) menuAdapter).notifyDataSetChanged();
 
             }
         }
@@ -406,7 +390,6 @@ public class HomePageFragment extends Fragment implements GoogleApiClient.Connec
             String jsonStr = sh.makeServiceCall(urlget, token2, lng, lat);
 
             Log.e("is offers :", "Response from url countries: " + jsonStr);
-
             if (jsonStr != null) {
                 try {
                     JSONArray jsonarray = new JSONArray(jsonStr);
@@ -487,11 +470,10 @@ public class HomePageFragment extends Fragment implements GoogleApiClient.Connec
 
                         }
                         offers_list.add(offer_ob);
-
                         if(slider_offers_list.size()<10&&featured.equals("1")){
+
                             slider_offers_list.add(offer_ob);
                         }
-
                     }
                 } catch (final JSONException e) {
                     Log.e("", "Json parsing error: " + e.getMessage());
@@ -517,7 +499,6 @@ public class HomePageFragment extends Fragment implements GoogleApiClient.Connec
 //                                "Couldn't get data from server. Check your internet connection or try later",
 //                                Toast.LENGTH_LONG).show();
 
-
                     }
                 });
             }
@@ -526,6 +507,7 @@ public class HomePageFragment extends Fragment implements GoogleApiClient.Connec
             return null;
         }
 
+        @RequiresApi(api = Build.VERSION_CODES.M)
         @Override
         protected void onPostExecute(Void result) {
             super.onPostExecute(result);
@@ -534,39 +516,207 @@ public class HomePageFragment extends Fragment implements GoogleApiClient.Connec
             String lng = pref.getString("Mylang", "");
             Log.e("language", lng);
             Log.e("after it", "size is ; " + offers_list.size());
-
-
             if(offers_list!=null&&!offers_list.isEmpty()){
+                Log.e("offers no empty","yeah full");
 
-                //offers_list.size()
+                Integer CountOfferLength=offers_list.size();
+                if(CountOfferLength >10)
+                {
+                    CountOfferLength=10;
+                }
 
-                for(int o=0;o<5;o++){
+                for(int o=0;o<CountOfferLength;o++){
                     part_offers_list.add(offers_list.get(o));
+                    numofItmesDown++;
+                    Log.e("value of","is "+numofItmesDown);
+
                 }
             }
             else{
                 Log.e("offers is empty","yeah");
             }
 
-            list = (ListView) getActivity().findViewById(R.id.list);
-
+            list = (ListView) view.findViewById(R.id.list);
             //set the adapter of CustomList Adapter
             adapter = new CustomListAdapter(
-                    getActivity().getApplicationContext(), R.layout.list_item, part_offers_list,lng
+                    getActivity(), R.layout.list_item, part_offers_list,lng
             );
 
             list.setAdapter(adapter);
 
             setListViewHeightBasedOnChildren(list);
 
+
+//
+//            recyclerView_offer = (RecyclerView) findViewById(R.id.RecyclerViewofferList);
+//            offerAdapter = new OfferAdapter(OfferModelList);
+//            RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext(),LinearLayoutManager.VERTICAL,false);
+//            recyclerView_offer.setLayoutManager(mLayoutManager);
+//            recyclerView_offer.setItemAnimator(new DefaultItemAnimator());
+//            recyclerView_offer.setAdapter((RecyclerView.Adapter) offerAdapter);
+//            for (int i=0;i<part_offers_list.size();i++)
+//            {
+//                if(lng.equals("ar")) {
+//                    OfferModel OfferModel = new OfferModel(part_offers_list.get(i).get("img"),part_offers_list.get(i).get("serviceName_en"),part_offers_list.get(i).get("discount"),part_offers_list.get(i).get("distance"),part_offers_list.get(i).get("clinicName_ar"),part_offers_list.get(i).get("cost"),part_offers_list.get(i).get("postCost"));
+//                    OfferModelList.add(OfferModel);
+//                }
+//                else
+//                {
+//                    OfferModel OfferModel = new OfferModel(part_offers_list.get(i).get("img"),part_offers_list.get(i).get("serviceName_en"),part_offers_list.get(i).get("discount"),part_offers_list.get(i).get("distance"),part_offers_list.get(i).get("clinicName_en"),part_offers_list.get(i).get("cost"),part_offers_list.get(i).get("postCost"));
+//                    OfferModelList.add(OfferModel);
+//                }
+//
+//            }
+//            ((RecyclerView.Adapter) offerAdapter).notifyDataSetChanged();
+
+//            recyclerView_offer.addOnScrollListener(new RecyclerViewPaginationListener((LinearLayoutManager) mLayoutManager) {
+//                @Override
+//                protected void loadMoreItems() {
+//                    isLoading = true;
+//                    currentPage++;
+//                    new offers().execute();
+//                }
+//
+//                @Override
+//                public boolean isLastPage() {
+//                    return isLastPage;
+//                }
+//
+//                @Override
+//                public boolean isLoading() {
+//                    return isLoading;
+//                }
+//            });
+
+
+
+
+            //            list.setOnScrollListener(new AbsListView.OnScrollListener() {
+//                @Override
+//                public void onScrollStateChanged(AbsListView absListView, int i) {
+//
+//                }
+//
+//                @Override
+//                public void onScroll(AbsListView absListView, int firstVisibleItem, int VisibleItemCount, int totalItemCount) {
+//                //check when scroll to last item listview in this tt , init data in listview= 10 items
+//                    Log.e("list count","is "+list.getCount());
+//                    Log.e("loaidng ","is "+isLoading);
+//                    Log.e("totalItemCount","is "+totalItemCount);
+//                    Log.e("lastpostion","is "+absListView.getLastVisiblePosition());
+//
+//                    if(absListView.getLastVisiblePosition()==totalItemCount-1&&list.getCount()>=10&& isLoading==false){
+//                        Log.e("reached "," last");
+//                        isLoading=true;
+//                        pagesize=false;
+//                        Thread thread=new ThreadGetMoreData();
+//                        thread.start();
+//
+//                    }
+
+//                }
+//            });
+
+//            list.setOnScrollListener(new EndlessScrollListener() {
+//                @Override
+//                public void onLoadMore(int page, int totalItemsCount) {
+//                    for(int o=0;o<10;o++){
+//                        part_offers_list.add(offers_list.get(numofItmes));
+//                        numofItmes++;
+//
+//
+//                    }
+//                    adapter.notifyDataSetChanged();
+//
+//
+//                }
+//
+//            });
+            homeMainLayout.setOnScrollChangeListener((NestedScrollView.OnScrollChangeListener) (v, scrollX, scrollY, oldScrollX, oldScrollY) -> {
+                if(v.getChildAt(v.getChildCount() - 1) != null) {
+
+                    if ((scrollY >= (v.getChildAt(v.getChildCount() - 1).getMeasuredHeight() - v.getMeasuredHeight())) &&
+                            scrollY > oldScrollY&&isLoading==false) {
+                        //code to fetch more data for endless scrolling
+                        Log.e("ListActivity","LoadeMore");
+                        Log.e("reached old X",""+oldScrollX);
+                        Log.e("reached old Y",""+oldScrollY);
+                        Log.e("reached X",""+scrollX);
+                        Log.e("reached Y",""+scrollY);
+
+                        if(removed){
+                            Scrollofy=scrollY-oldScrollY;
+                            Scrollofx=scrollX-oldScrollX;
+                            Scrollofy=oldScrollY-9100;
+                            Scrollofx=0;
+                            Log.e("reomved item ","scrollofy: "+Scrollofy);
+                            Log.e("reomved item"," Scrollofx " +Scrollofx);
+                        }
+                        isLoading=true;
+                        downTriggerd=true;
+                        pagesize=false;
+                        Thread thread=new HomePageFragment.ThreadGetMoreData();
+                        thread.start();
+                        if(!removed){
+                            //     homeMainLayout.scrollTo(oldScrollX,oldScrollY)
+                            Scrollofy=oldScrollY;
+                            Scrollofx=oldScrollX;
+                            Log.e("not reomved item"," Scrollofx " +Scrollofx);
+                            Log.e("not reomved item ","scrollofy: "+Scrollofy);
+
+                        }
+
+                        //   setListViewHeightBasedOnChildren(list);
+
+                    }
+                    if(scrollY==0&&isLoading==false){
+                        Log.e("we are at", "TOP SCROLL");
+                        isLoading=true;
+                        downTriggerd=false;
+                        pagesize=false;
+                        if(removed){
+                            Scrollofy=scrollY-oldScrollY;
+                            Scrollofx=scrollX-oldScrollX;
+                            Scrollofy=9100;
+                            Scrollofx=0;
+                            Log.e("reomved item ","scrollofy: "+Scrollofy);
+                            Log.e("reomved item"," Scrollofx " +Scrollofx);
+                        }
+                        Thread thread=new HomePageFragment.ThreadGetMoreData();
+                        thread.start();
+                        if(!removed){
+                            Scrollofx=scrollX;
+                            Scrollofy=scrollY;
+                        }
+
+//                        Scrollofy=scrollY-oldScrollY;
+//                        Scrollofx=scrollX-oldScrollX;
+//                        Scrollofy=oldScrollY-Scrollofy;
+//                        Scrollofx=oldScrollX-Scrollofx;
+                        //homeMainLayout.scrollTo(oldScrollX,oldScrollY);
+
+
+                    }
+                }
+            });
+
+            list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    HashMap<String, String> offers = (HashMap<String, String>) parent.getAdapter().getItem(position);
+                    Intent intent= new Intent(getActivity(),ClinicPage.class);
+                    intent.putExtra("Clinic", offers);
+                    startActivity(intent);
+
+                    //here i want to get the items
+                }
+            });
+
             setSliderViews(slider_offers_list);
-
-
             Runnable progressRunnable = new Runnable() {
 
                 @Override
                 public void run() {
-//                    pd.cancel();
+                   // pd.cancel();
 
                 }
             };
@@ -577,7 +727,194 @@ public class HomePageFragment extends Fragment implements GoogleApiClient.Connec
         }
     }
 
+    public class MyHandler extends Handler{
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what){
+                case 0:
+                    //add
+                    // list.addFooterView(ftView);
+                    listprog.setVisibility(View.VISIBLE);
 
+                    break;
+
+                case 1:
+                    //update
+                    if(refresh){Handler handler=new Handler();
+                        handler.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                listprog.setVisibility(View.GONE);
+
+                                //Do something after 100ms
+                                adapter.addListItemToAdapter(map,downTriggerd);
+
+                                // list.removeFooterView(ftView);
+                                //Remove loading view
+                                if(removed){
+                                    homeMainLayout.scrollTo(Scrollofx,Scrollofy);
+
+                                }
+                                setListViewHeightBasedOnChildren(list);
+
+//                            if(!removed){
+//                                homeMainLayout.scrollTo(Scrollofx,Scrollofy);
+//
+//                            }
+
+                                isLoading=false;
+                            }
+                        }, 2500);
+                    }
+                    else{
+
+                    }
+
+                default:
+                    break;
+            }
+        }
+    }
+    private ArrayList<HashMap<String,String>> getMoreData(){
+
+        ArrayList<HashMap<String,String>>offeraddList=new ArrayList<>();
+        ArrayList<HashMap<String,String>>offeraddListRemove=new ArrayList<>();
+
+        for(int o=0;o<10;o++){
+            if(numofItmesDown!=offers_list.size()-1&&numofItmesUP!=offers_list.size()-1){
+                //down scroll
+                if(downTriggerd){
+                    if(numofItmesDown>=50){
+                        offeraddList.add(offers_list.get(numofItmesDown));
+                        numofItmesDown++;
+                        numofItmesUP++;
+                        offeraddListRemove.add(offers_list.get(numofItmesUP));
+                        removed=true;
+                        refresh=true;
+
+
+                    }
+                    else{
+                        offeraddList.add(offers_list.get(numofItmesDown));
+                        numofItmesDown++;
+                        removed=false;
+                        refresh=true;
+
+                    }
+
+                }
+//up scroll
+                else{
+                    if(numofItmesUP>=0){
+                        if(numofItmesDown>=50){
+                            Log.e("up counter"," "+numofItmesUP);
+                            Log.e("down counter"," "+numofItmesUP);
+
+                            offeraddList.add(offers_list.get(numofItmesUP));
+                            offeraddListRemove.add(offers_list.get(numofItmesDown));
+                            removed=true;
+                            refresh=true;
+
+                            numofItmesDown--;
+                            numofItmesUP--;
+
+                        }
+                        else{
+                            if(numofItmesUP!=0){
+                                offeraddList.add(offers_list.get(numofItmesUP));
+                                numofItmesDown--;
+                                numofItmesUP--;
+                            }
+                            else if(numofItmesUP==0) {
+                                offeraddList.add(offers_list.get(numofItmesUP));
+                            }
+//
+                            map.put("offeraddList",offeraddList);
+                            map.put("offeraddListRemove",offeraddListRemove);
+                            return offeraddList;
+                        }
+                    }
+                    else {
+                        // refresh=false;
+                        map.put("offeraddList",offeraddList);
+                        map.put("offeraddListRemove",offeraddListRemove);
+                        return offeraddList;
+
+                    }
+
+
+                }
+
+            }
+
+            else if(downTriggerd&&numofItmesDown==offers_list.size()-1) {
+                refresh=false;
+                Log.e("End of it","no more offers");
+                map.put("offeraddList",offeraddList);
+                map.put("offeraddListRemove",offeraddListRemove);
+                return offeraddList;
+            }
+            else if (!downTriggerd&&numofItmesDown!=offers_list.size()-1){
+                refresh=true;
+                offeraddList.add(offers_list.get(numofItmesUP));
+                offeraddListRemove.add(offers_list.get(numofItmesDown));
+                removed=true;
+
+                numofItmesDown--;
+                numofItmesUP++;
+
+            }
+            else if(!downTriggerd&&numofItmesUP==offers_list.size()-1){
+                refresh=false;
+                Log.e("End of it","no more offers");
+                map.put("offeraddList",offeraddList);
+                map.put("offeraddListRemove",offeraddListRemove);
+                return offeraddList;
+            }
+            else if(downTriggerd&&numofItmesUP==offers_list.size()-1){
+                refresh=true;
+                offeraddList.add(offers_list.get(numofItmesUP));
+                offeraddListRemove.add(offers_list.get(numofItmesDown));
+                removed=true;
+
+                numofItmesDown++;
+                numofItmesUP--;
+            }
+        }
+        map.put("offeraddList",offeraddList);
+        map.put("offeraddListRemove",offeraddListRemove);
+        return offeraddList;
+    }
+    //        if(numofItmesUP>0){
+//            offeraddList.remove(numofItmesUP);
+//
+//            numofItmesUP--;
+//        }
+//        else{
+//
+//
+//        }
+    public class ThreadGetMoreData extends Thread{
+        @Override
+        public void run() {
+            //add footer view afte get data
+            if(refresh)
+                mHandler.sendEmptyMessage(0);
+            //search more data
+            // ArrayList<HashMap<String,String>> listResult=
+            getMoreData();
+            //delay time to show loading footer when debug, remove it when relese
+//            try {
+//                Thread.sleep(3000);
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
+            //send result to handle
+            Message msg= mHandler.obtainMessage(1,map);
+            mHandler.sendMessage(msg);
+
+        }
+    }
 
 
     private void setSliderViews(ArrayList<HashMap<String, String>> offers) {
